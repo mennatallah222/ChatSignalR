@@ -1,37 +1,108 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
-    <title>SignalR Chat</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script> <!-- Ensure this reference -->
+    <link rel="stylesheet" href="chatPageStyle.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <title>SignalR App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 </head>
-<body>
+<body style="font-family: Roboto,serif">
 
-    <div id="messages"></div>
-    <input type="text" id="userInput" placeholder="enter your name" />
-    <input type="text" id="messageId" placeholder="enter your message" />
-    <button onclick="sendMsg()">Send</button>
+<div id="homeScreen">
+    <input type="text" id="userName" placeholder="Username">
+    <input type="text" id="roomName" placeholder="Room">
+    <button id="joinRoom">Join Room</button>
 
-    <script>
-        const con = new signalR.HubConnectionBuilder()
-            .withUrl("/chat")
-            .build();
+</div>
 
-        con.on("ReceiveMessage", (user, message) => {
-            const msg = document.createElement("p");
-            msg.textContent = `${user}: ${message}`;
+<div id="chatScreen" style="display:none">
+    <div class="container">
+        <h1 id="roomTitle"></h1>
+        <div id="messages"></div>
+        <div class="input">
+            <input type="text" id="messageInput" placeholder="Message" autocomplete="off">
+            <button class="send-btn">
 
-            document.getElementById("messages").appendChild(msg);
-        });
+                <i class="fa-solid fa-paper-plane"></i>
+</button>
+        </div>
+    </div>
+    
+</div>
 
-        con.start().catch(err => console.error(err));
 
-        function sendMsg() {
-            const user = document.getElementById("userInput").value;
-            const msg = document.getElementById("messageId").value;
+<script>
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/chat")
+        .build();
 
-            con.invoke("SendMessage", user, msg);
+    connection.start().catch(err => console.error(err.toString()));
+
+    document.getElementById("joinRoom").addEventListener("click", function () {
+        const roomName = document.getElementById("roomName").value;
+        const userName = document.getElementById("userName").value;
+
+        connection.invoke("JoinedRoom", roomName, userName)
+            .catch(err => console.error(err.toString()));
+
+        document.getElementById("homeScreen").style.display = "none";
+        document.getElementById("chatScreen").style.display = "block";
+        document.getElementById("messageInput").focus();
+    });
+
+    //"keyup" occurs whenever a key is released after being pressed down within the input field
+    document.getElementById("messageInput").addEventListener("keyup", function (event) {
+        if (event.key === "Enter") {
+            const message = document.getElementById("messageInput").value;
+            const roomName = document.getElementById("roomName").value;
+
+            if (message && roomName) {
+                connection.invoke("SendMessageToRoom", roomName, message)
+                    .catch(err => console.error(err.toString()));
+
+                document.getElementById("messageInput").value = '';
+            }
         }
-    </script>
+    });
+
+    document.querySelector(".send-btn").addEventListener("click", () => {
+        const message = document.getElementById("messageInput").value;
+        const roomName = document.getElementById("roomName").value;
+
+        if (message && roomName) {
+            connection.invoke("SendMessageToRoom", roomName, message)
+                .catch(err => console.error(err.toString()));
+
+            document.getElementById("messageInput").value = '';
+        }
+    });
+
+
+    connection.on("ReceiveMessage", function (msg) {
+        const messages = document.getElementById("messages");
+        const userName = document.getElementById("userName").value;
+        const msgType = msg.name === userName ? "users" : "others";
+        messages.innerHTML += `
+        <div class="groupMessage ${msgType}">
+            <span class="userSpan">${msg.name}</span>
+            <p class="textContent"><br> ${msg.text}</p>
+        </div>
+        `;
+        messages.scrollTop = messages.scrollHeight;//???
+    });
+
+
+    connection.on("UserJoined", function (msg) {
+        const messages = document.getElementById("messages");
+        messages.innerHTML += `<p class="joinedAndLeftMsg">${msg} has joined the chat</p>`;
+    });
+
+    connection.on("UserLeft", function (msg) {
+        const messages = document.getElementById("messages");
+        messages.innerHTML += `<p class="joinedAndLeftMsg">${msg} has left the chat</p>`;
+    });
+
+</script>
 </body>
 </html>
