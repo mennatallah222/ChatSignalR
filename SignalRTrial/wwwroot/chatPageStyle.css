@@ -27,17 +27,16 @@ body {
     height: 100vh;
 }
 
-.container {
+.cont {
     display: flex;
     /*flex: 1;*/
     flex-direction: column;
     align-self: self-end;
     align-items: center;
     align-content: space-between;
-    height: 100%;
-    background-image: url('./wallpaper3.gif');
-    background-size:cover;
-    background-repeat:no-repeat;
+    height: 100vh;
+    background-size: cover;
+    background-repeat: no-repeat;
 }
 
 .userSpan {
@@ -142,3 +141,66 @@ i {
         background-color: #bbbbbb;
         cursor: pointer;
     }
+
+
+
+
+.userGroups{
+    align-self:start;
+    margin:40px 0px 0px 40px;
+    cursor:pointer;
+}
+
+.modal-backdrop.fade.show {
+    display: none;
+}
+.modal-content {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(5px);
+    padding-right: 10px;
+}
+
+
+
+.groups-div {
+    position: absolute;
+    top: 90px;
+    left: -40px;
+    width: 400px;
+    height: 87.6%;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background-color: #808080;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: left 0.2s ease;
+    z-index: 1;
+    display: none;
+}
+
+    .groups-div li {
+        margin-bottom: 15px;
+        width: 90%;
+        padding:10px;
+        font-size:20px;
+        cursor:pointer;
+        margin-left:25px;
+        position:relative;
+        top:20px;
+        list-style:none;
+        transition:all 0.9s ease;
+        border-radius:10px;
+    }
+    .groups-div li:hover{
+        background-color:white;
+    }
+    .groups-div img {
+        border-radius: 50%;
+        width: 40px;
+    }
+
+
+/*border-bottom: 1px solid rgb(174, 174, 174);*/

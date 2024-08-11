@@ -3,106 +3,80 @@
 <head>
     <link rel="stylesheet" href="chatPageStyle.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 
     <title>SignalR App</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 </head>
-<body style="font-family: Roboto,serif">
+<body>
 
-<div id="homeScreen">
-    <input type="text" id="userName" placeholder="Username">
-    <input type="text" id="roomName" placeholder="Room">
-    <button id="joinRoom">Join Room</button>
 
-</div>
+    <div id="homeScreen">
+        <input type="text" id="userName" placeholder="Username">
+        <input type="text" id="roomName" placeholder="Room">
+        <button id="joinRoom">Join Room</button>
 
-<div id="chatScreen" style="display:none">
-    <div class="container">
-        <h1 id="roomTitle"></h1>
-        <div id="messages"></div>
-        <div class="input">
-            <input type="text" id="messageInput" placeholder="Message" autocomplete="off">
-            <button class="send-btn">
-
-                <i class="fa-solid fa-paper-plane"></i>
-</button>
-        </div>
     </div>
-    
-</div>
+
+    <div id="chatScreen" style="display:none">
+        <div class="cont">
+
+            <i class="fa fa-bars userGroups" style="font-size:36px"></i>
+            <div class="displayGroups">
+                <div class="groups-div">
+                    <ul id="groups-list"></ul>
+                </div>
+                <div class="card-group"></div>
+            </div>
 
 
-<script>
-    const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/chat")
-        .build();
+            <h1 id="roomTitle"></h1>
+            <div id="messages"></div>
+            <div class="input">
+                <input type="text" id="messageInput" placeholder="Message" autocomplete="off">
+                <button class="send-btn">
 
-    connection.start().catch(err => console.error(err.toString()));
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
 
-    document.getElementById("joinRoom").addEventListener("click", function () {
-        const roomName = document.getElementById("roomName").value;
-        const userName = document.getElementById("userName").value;
+                <!-- Modal -->
+                <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content" style="display:flex; flex-direction:row;">
+                            <!--<div class="modal-header">-->
+                            <!--<h5 class="modal-title" id="alertModalLabel">Notification</h5>-->
+                            <!--</div>-->
 
-        connection.invoke("JoinedRoom", roomName, userName)
-            .catch(err => console.error(err.toString()));
+                            <div class="modal-body" id="alertModalBody">
 
-        document.getElementById("homeScreen").style.display = "none";
-        document.getElementById("chatScreen").style.display = "block";
-        document.getElementById("messageInput").focus();
-    });
+                                <!-- Notification message will be inserted here -->
+                            </div>
+                            <div style="display:flex;">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close" ">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <!--<div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>-->
+                        </div>
+                    </div>
+                </div>
 
-    //"keyup" occurs whenever a key is released after being pressed down within the input field
-    document.getElementById("messageInput").addEventListener("keyup", function (event) {
-        if (event.key === "Enter") {
-            const message = document.getElementById("messageInput").value;
-            const roomName = document.getElementById("roomName").value;
-
-            if (message && roomName) {
-                connection.invoke("SendMessageToRoom", roomName, message)
-                    .catch(err => console.error(err.toString()));
-
-                document.getElementById("messageInput").value = '';
-            }
-        }
-    });
-
-    document.querySelector(".send-btn").addEventListener("click", () => {
-        const message = document.getElementById("messageInput").value;
-        const roomName = document.getElementById("roomName").value;
-
-        if (message && roomName) {
-            connection.invoke("SendMessageToRoom", roomName, message)
-                .catch(err => console.error(err.toString()));
-
-            document.getElementById("messageInput").value = '';
-        }
-    });
-
-
-    connection.on("ReceiveMessage", function (msg) {
-        const messages = document.getElementById("messages");
-        const userName = document.getElementById("userName").value;
-        const msgType = msg.name === userName ? "users" : "others";
-        messages.innerHTML += `
-        <div class="groupMessage ${msgType}">
-            <span class="userSpan">${msg.name}</span>
-            <p class="textContent"><br> ${msg.text}</p>
+            </div>
         </div>
-        `;
-        messages.scrollTop = messages.scrollHeight;//???
-    });
+        
+    </div>
 
 
-    connection.on("UserJoined", function (msg) {
-        const messages = document.getElementById("messages");
-        messages.innerHTML += `<p class="joinedAndLeftMsg">${msg} has joined the chat</p>`;
-    });
+    <script src="ChatPageScript.js">
 
-    connection.on("UserLeft", function (msg) {
-        const messages = document.getElementById("messages");
-        messages.innerHTML += `<p class="joinedAndLeftMsg">${msg} has left the chat</p>`;
-    });
 
-</script>
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!--<script src="NotificationScript.js"></script>-->
 </body>
 </html>

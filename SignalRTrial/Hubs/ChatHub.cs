@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 
-namespace SignalRTrial
+namespace SignalRTrial.Hubs
 {
     public record User(string name, string room);
     public record Message(string name, string text);
+    public record Group(string name);
     public class ChatHub : Hub
     {
         private static ConcurrentDictionary<string, User> _users = new();
@@ -27,6 +28,8 @@ namespace SignalRTrial
 
             await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
             await Clients.Group(roomName).SendAsync("UserJoined", userName);
+
+            await Clients.Caller.SendAsync("AddToGroupsDiv", roomName);
         }
 
         public async Task SendMessageToRoom(string roomName, string message)
@@ -34,8 +37,17 @@ namespace SignalRTrial
             var user = _users[Context.ConnectionId];
             var msg = new Message(user.name, message);
 
-            await Clients.OthersInGroup(roomName).SendAsync("ReceiveMessage", msg);
+            await Clients.Group(roomName).SendAsync("ReceiveMessage", msg);
+            await NotifyGroupMembers(roomName, message);
         }
+
+        private async Task NotifyGroupMembers(string groupName, string message)
+        {
+            var notificationMessage = $"New message in group {groupName}: {message}";
+
+            await Clients.OthersInGroup(groupName).SendAsync("ReceiveNotification", notificationMessage);
+        }
+
     }
 
 }
