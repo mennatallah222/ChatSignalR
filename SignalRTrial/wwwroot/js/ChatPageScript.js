@@ -1,20 +1,27 @@
-﻿const connection = new signalR.HubConnectionBuilder()
-    .withUrl("/chat")
-    .build();
+﻿
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/chat")
+        .build();
+    connection.start().catch(err => console.error(err.toString()));
+    document.getElementById("joinRoom").addEventListener("click", function () {
+        const roomName = document.getElementById("roomName").value;
+        const userName = document.getElementById("userName").value;
 
-connection.start().catch(err => console.error(err.toString()));
+        if (userName && roomName) {
+            connection.invoke("JoinedRoom", roomName, userName).catch(err => console.error(err.toString()));
+            document.getElementById("homeScreen").style.display = "none";
+            document.getElementById("chatScreen").style.display = "block";
+            document.getElementById("roomTitle").innerText = `Room: ${roomName}`;
 
-document.getElementById("joinRoom").addEventListener("click", function () {
-    const roomName = document.getElementById("roomName").value;
-    const userName = document.getElementById("userName").value;
+        }
+        else alert("please enter your username and the groupname");
 
-    connection.invoke("JoinedRoom", roomName, userName)
-        .catch(err => console.error(err.toString()));
+    });
 
-    document.getElementById("homeScreen").style.display = "none";
-    document.getElementById("chatScreen").style.display = "block";
-    document.getElementById("messageInput").focus();
-});
+
+
+
+
 
 //"keyup" occurs whenever a key is released after being pressed down within the input field
 document.getElementById("messageInput").addEventListener("keyup", function (event) {
@@ -50,20 +57,20 @@ document.querySelector(".send-btn").addEventListener("click", () => {
 connection.on("ReceiveMessage", function (msg) {
     const messages = document.getElementById("messages");
     const userName = document.getElementById("userName").value;
-    const msgType = msg.name === userName ? "users" : "others";
+    const msgType = msg.senderId === userName ? "users" : "others";
     messages.innerHTML += `
         <div class="groupMessage ${msgType}">
-            <span class="userSpan">${msg.name}</span>
-            <p class="textContent"><br> ${msg.text}</p>
+            <span class="userSpan">${msg.senderId}</span>
+            <p class="textContent"><br> ${msg.content}</p>
         </div>
         `;
-    messages.scrollTop = messages.scrollHeight;//???
+    messages.scrollTop = messages.scrollHeight;
 });
 
 
-connection.on("ReceiveMessage", (message) => {
-    console.log("Message received: " + message);
-});
+//connection.on("ReceiveMessage", (message) => {
+//    console.log("Message received: " + message);
+//});
 
 connection.on("ReceiveNotification", (notificationMessage) => {
     document.getElementById("alertModalBody").innerHTML = `
@@ -87,10 +94,11 @@ connection.on("UserLeft", function (msg) {
     messages.innerHTML += `<p class="joinedAndLeftMsg">${msg} has left the chat</p>`;
 });
 
-
-connection.on("AddToGroupsDiv", function (roomName) {
+connection.on("AddToGroupsDiv", function (groups) {
     const groupDiv = document.getElementById("groups-list");
-    if (groupDiv) {
+    groupDiv.innerHTML = '';
+
+    groups.forEach(roomName => {
         const newItem = document.createElement('li');
         const groupImage = document.createElement('img');
         groupImage.src = "groupPhoto.jpg";
@@ -99,17 +107,12 @@ connection.on("AddToGroupsDiv", function (roomName) {
         newItem.appendChild(groupImage);
         newItem.appendChild(document.createTextNode(roomName));
 
-
         groupDiv.appendChild(newItem);
-        console.log("group added");
+    });
 
-    } else console.error("errorrrrrrrrr");
 });
 
 
-
-
-///////////////////////////////////////////////////////////////////
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelector(".userGroups").addEventListener('click', toggleGroups);
 });
@@ -123,5 +126,3 @@ function toggleGroups() {
     }
     console.log("it is displayed");
 }
-
-
