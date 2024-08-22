@@ -57,10 +57,10 @@ document.querySelector(".send-btn").addEventListener("click", () => {
 connection.on("ReceiveMessage", function (msg) {
     const messages = document.getElementById("messages");
     const userName = document.getElementById("userName").value;
-    const msgType = msg.senderId === userName ? "users" : "others";
+    const msgType = msg.sender === userName ? "users" : "others";
     messages.innerHTML += `
         <div class="groupMessage ${msgType}">
-            <span class="userSpan">${msg.senderId}</span>
+            <span class="userSpan">${msg.sender}</span>
             <p class="textContent"><br> ${msg.content}</p>
         </div>
         `;
@@ -93,7 +93,6 @@ connection.on("UserLeft", function (msg) {
     const messages = document.getElementById("messages");
     messages.innerHTML += `<p class="joinedAndLeftMsg">${msg} has left the chat</p>`;
 });
-
 connection.on("AddToGroupsDiv", function (groups) {
     const groupDiv = document.getElementById("groups-list");
     groupDiv.innerHTML = '';
@@ -125,4 +124,47 @@ function toggleGroups() {
         groupsDiv.style.display = "none";
     }
     console.log("it is displayed");
+}
+
+
+
+document.querySelector("#groups-list").addEventListener('click', function (e) {
+    if (e.target && e.target.nodeName === "LI") {
+        const selectedGroup = e.target.textContent.trim();
+        document.getElementById("roomName").value = selectedGroup;
+        document.getElementById("roomTitle").innerText = `Room: ${selectedGroup}`;
+
+        // Clear current messages before loading new ones
+        document.getElementById("messages").innerHTML = '';
+
+        // Fetch messages for the selected group
+        loadMessages(selectedGroup);
+    }
+});
+
+
+
+function loadMessages(roomName) {
+    connection.invoke("LoadMessages", roomName).catch(err => console.log(err.toString()));
+}
+
+connection.on("LoadGroupMessages", (msgs) => {
+    displayMessages(msgs);
+});
+
+function displayMessages(messages) {
+    const messagesDiv = document.getElementById("messages");
+    messagesDiv.innerHTML = ''; // Clear previous messages
+
+    messages.forEach(msg => {
+        const msgType = msg.userName === document.getElementById("userName").value ? "users" : "others";
+        messagesDiv.innerHTML += `
+            <div class="groupMessage ${msgType}">
+                <span class="userSpan">${msg.userName}</span>
+                <p class="textContent"><br>${msg.content}</p>
+            </div>
+        `;
+    });
+
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }

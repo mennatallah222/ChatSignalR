@@ -53,20 +53,6 @@ namespace SignalRTrial.Hubs
             var uid = await _userService.GetUserIdByUserNameAsync(userName);
             var user = await _userService.GetUserByIdAsync(uid);
 
-            if (user == null)
-            {
-                user = new User { UserName = userName, Groups = new List<string> { roomName } };
-                await _userService.CreateUserAsync(user);
-            }
-            else
-            {
-                if (!user.Groups.Contains(roomName))
-                {
-                    user.Groups.Add(roomName);
-                    await _userService.UpdateUserAsync(uid, user);
-                }
-
-            }
 
             //check for the group
             var group = await _groupService.GetGroupByNameAsync(roomName);
@@ -75,14 +61,26 @@ namespace SignalRTrial.Hubs
                 group = new Group { Name = roomName, Members = new List<string> { uid } };
                 await _groupService.CreateGroupAsync(group);
             }
-            else
+
+
+            if (user == null)
             {
-                //if the group exists, just add the user to it if it's not a member already
-                if (!group.Members.Contains(uid))
-                {
-                    await _groupService.AddMemberToGroupAsync(group.Id, uid);
-                }
+                user = new User { UserName = userName, Groups = new List<string> { roomName } };
+                await _userService.CreateUserAsync(user);
             }
+
+
+            //if the group exists, just add the user to it if it's not a member already
+            if (!group.Members.Contains(uid))
+            {
+                await _groupService.AddMemberToGroupAsync(group.Id, uid);
+            }
+            if (!user.Groups.Contains(roomName))
+            {
+                user.Groups.Add(roomName);
+                await _userService.UpdateUserAsync(uid, user);
+            }
+
 
             await Clients.Caller.SendAsync("AddToGroupsDiv", user.Groups);
 
@@ -94,12 +92,37 @@ namespace SignalRTrial.Hubs
         {
             if (_connections.TryGetValue(Context.ConnectionId, out var userName))
             {
-                var msg = new Message(userName, message);
-                await Clients.Group(roomName).SendAsync("ReceiveMessage", new { senderId = userName, content = message });
+                var uid = await _userService.GetUserIdByUserNameAsync(userName);
+                var group = await _groupService.GetGroupByNameAsync(roomName);
+                var msg = new Message
+                {
+                    SenderId = uid,
+                    UserName = userName,
+                    RecieverId = group.Id,
+                    GroupId = group.Id,
+                    Content = message,
+                    Timestamp = DateTime.Now
+                };
+                group.Messages?.Add(msg.Content);
+                await _messageService.CreateMessageAsync(msg);
+                await Clients.Group(roomName).SendAsync("ReceiveMessage", new { sender = userName, content = message });
                 await NotifyGroupMembers(roomName, message);
             }
         }
 
+        public async Task LoadMessages(string roomName)
+        {
+            if (_connections.TryGetValue(Context.ConnectionId, out var userName))
+            {
+                var uid = await _userService.GetUserIdByUserNameAsync(userName);
+                var group = await _groupService.GetGroupByNameAsync(roomName);
+                if (group != null)
+                {
+                    var messages = await _messageService.GetMessagesForChatAsync(group.Id);
+                    await Clients.Caller.SendAsync("LoadGroupMessages", messages);
+                }
+            }
+        }
         private async Task NotifyGroupMembers(string groupName, string message)
         {
             var notificationMessage = $"New message in group {groupName}: {message}";

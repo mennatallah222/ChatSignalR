@@ -33,12 +33,17 @@ namespace SignalRTrial.Services
             await _messages.DeleteOneAsync(u => u.Id == id);
         }
 
-        public async Task<List<Message>> GetMessagesForChatAsync(string uid1, string uid2)
+        public async Task<List<Message>> GetMessagesForChatAsync(string groupId)
         {
-            return await _messages.Find(m =>
-            (m.SenderId == uid1 && m.RecieverId == uid2) ||
-            (m.SenderId == uid2 && m.RecieverId == uid1)
-            ).ToListAsync();
+            // Filter messages by the GroupId to fetch all messages in the group
+            return await _messages.Find(m => m.GroupId == groupId).ToListAsync();
         }
+        //public async Task<List<Message>> GetMessagesForChatAsync(string uid1, string uid2)
+        //{
+        //    return await _messages.Find(m =>
+        //    (m.SenderId == uid1 || m.RecieverId == uid2) ||
+        //    (m.SenderId == uid2 || m.RecieverId == uid1)
+        //    ).ToListAsync();
+        //}
     }
 }
