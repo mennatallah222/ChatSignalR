@@ -39,5 +39,23 @@ namespace SignalRTrial.Services
             await _users.DeleteOneAsync(u => u.Id == id);
         }
 
+        public async Task ExitFromGroup(string gid, string uid)
+        {
+            var update = Builders<User>.Update.Pull(g => g.GroupsIds, gid);
+
+            var result = await _users.UpdateOneAsync(u => u.Id == uid, update);
+            if (result.ModifiedCount == 0)
+            {
+                // Handle the case where the user's document was not modified (e.g., log a warning)
+                Console.WriteLine($"No group with ID {gid} was found in the user's groups.");
+            }
+        }
+
+        public async Task<List<User>> GetUsersAsync()
+        {
+            var uids = Builders<User>.Filter.Empty;
+            var users = await _users.Find(uids).ToListAsync();
+            return users;
+        }
     }
 }

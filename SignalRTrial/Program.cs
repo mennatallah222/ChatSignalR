@@ -53,12 +53,13 @@ app.UseRouting();
 app.UseAuthorization();
 
 
+
+
 app.UseStaticFiles();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
     endpoints.MapHub<ChatHub>("/chat");
-    endpoints.MapHub<ChatHub>("/notificationHub");
 });
 
 app.Run();

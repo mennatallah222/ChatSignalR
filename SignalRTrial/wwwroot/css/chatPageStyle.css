@@ -1,15 +1,36 @@
 ﻿#homeScreen {
     display: flex;
+    justify-content:center;
     align-items: center;
     padding: 10px;
     flex-direction: column;
     gap: 5px;
+    background-color:burlywood;
+    height:100vh;
 }
-
-#userName, #roomName {
-    font-size: 3rem;
+#homeScreen button{
+    border:none;
+    border-radius:40px;
+    padding:20px;
+    font-size:20px;
+}
+*{
+    outline:none;
+}
+#userName, #email {
+    border-radius:20px;
+    font-size: 1.5rem;
     width: 35rem;
     margin-bottom: 15px;
+    border:none;
+    padding:20px;
+}
+#roomName {
+    border-radius: 20px;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    border: none;
+    /*padding:20px;*/
 }
 
 #chatScreen{
@@ -69,12 +90,14 @@ body {
 }
 #messages {
     display: flex;
-    flex:1;
-    overflow-y:auto;
-    word-wrap:break-word;
+    flex: 1;
+    overflow-y: auto;
+    word-wrap: break-word;
     flex-direction: column;
     align-items: flex-start;
     width: 70%;
+    position: relative;
+    top: 80px;
 }
 .textContent {
     word-wrap: break-word;
@@ -183,19 +206,29 @@ i {
 
     .groups-div li {
         margin-bottom: 15px;
-        width: 90%;
-        padding:10px;
-        font-size:20px;
-        cursor:pointer;
-        margin-left:25px;
-        position:relative;
-        top:20px;
-        list-style:none;
-        transition:all 0.9s ease;
-        border-radius:10px;
+        padding: 10px;
+        cursor: pointer;
+        margin-left: 25px;
+        position: relative;
+        top: 20px;
+        list-style: none;
+        transition: all 0.4s ease;
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
+    
     .groups-div li:hover{
         background-color:white;
+    }
+        .groups-div li i {
+            padding: 5px;
+            border-radius: 10px;
+            transition: all 0.4s ease;
+        }
+    .groups-div li i:hover{
+        background-color:gray;
     }
     .groups-div img {
         border-radius: 50%;
@@ -203,4 +236,31 @@ i {
     }
 
 
+
+    .topBar i{
+        position:absolute;
+        left:0;
+    }
+#addCahr-btn {
+    position: absolute;
+    right: 10px;
+    top: 20px;
+    padding: 20px;
+    border-radius: 5px;
+    border: none;
+    background-color: burlywood;
+    font-weight: bold;
+}
+
+.modal {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+/*.delete-div {
+    padding: 10px;
+    border-radius: 4px;
+    width: 7rem;
+    text-align: center;
+    color: white;
+    font-size:1rem;
+}*/
 /*border-bottom: 1px solid rgb(174, 174, 174);*/

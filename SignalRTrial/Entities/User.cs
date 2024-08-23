@@ -13,18 +13,18 @@ namespace SignalRTrial.Entities
         public string ProfilePicture { get; set; }
         public string Status { get; set; }
         public ICollection<string> Contacts { get; set; }
-        public ICollection<string> Groups { get; set; }
+        public ICollection<string> GroupsIds { get; set; }
 
         public User()
         {
             Contacts = new HashSet<string>();
-            Groups = new HashSet<string>();
+            GroupsIds = new HashSet<string>();
         }
 
         public User(string userName, string roomName) : this() //call the default constructor
         {
             UserName = userName;
-            Groups = new HashSet<string> { roomName };
+            GroupsIds = new HashSet<string>();
         }
     }
 }

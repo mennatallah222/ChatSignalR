@@ -17,6 +17,19 @@ namespace SignalRTrial.Services
             return group;
         }
 
+        public async Task<List<string>> GetGroupsIds(string uid)
+        {
+            var filteredGroups = Builders<Group>.Filter.AnyEq(g => g.Members, uid);
+            var groups = await _groups.Find(filteredGroups).ToListAsync();
+
+            var gids = new List<string>();
+            foreach (var group in groups)
+            {
+                gids.Add(group.Id);
+            }
+            return gids;
+        }
+
         public async Task<Group> GetGroupByIdAsync(string id)
         {
             return await _groups.Find(g => g.Id == id).FirstOrDefaultAsync();
@@ -44,5 +57,15 @@ namespace SignalRTrial.Services
             await _groups.DeleteOneAsync(u => u.Id == id);
         }
 
+        public async Task<List<Group>> GetUserGroupsAsync(ICollection<string> groupIds)
+        {
+            // Filter to find groups that match the provided group IDs
+            var filter = Builders<Group>.Filter.In(g => g.Id, groupIds);
+
+            // Retrieve the matching groups from the database
+            var groups = await _groups.Find(filter).ToListAsync();
+
+            return groups;
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using MongoDB.Bson;
 using SignalRTrial.Entities;
 using SignalRTrial.Services;
 using System.Collections.Concurrent;
@@ -10,7 +11,6 @@ namespace SignalRTrial.Hubs
     //public record Group(string name);
     public class ChatHub : Hub
     {
-
         private readonly UserService _userService;
         private readonly MessageService _messageService;
         private readonly GroupService _groupService;
@@ -30,30 +30,62 @@ namespace SignalRTrial.Hubs
         {
             if (_connections.TryRemove(Context.ConnectionId, out var uid))
             {
-                var user = await _userService.GetUserByIdAsync(uid);
-                if (user != null)
+                if (ObjectId.TryParse(uid, out var objectId))
                 {
-                    foreach (var group in user.Groups)
+                    var user = await _userService.GetUserByIdAsync(uid);
+                    if (user != null)
                     {
-                        await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
-                        await Clients.Group(group).SendAsync("UserLeft", user.UserName);
+                        foreach (var group in user.GroupsIds)
+                        {
+                            await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
+                            await Clients.Group(group).SendAsync("UserLeft", user.UserName);
+                        }
                     }
+                }
+                else
+                {
+                    // Log or handle the situation where uid is not a valid ObjectId
+                    Console.WriteLine($"Invalid ObjectId: {uid}");
                 }
             }
 
             await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task JoinedRoom(string roomName, string userName)
+        //the sign in
+        public async Task JoinedRoom(string userName, string email)
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
-
-            _connections[Context.ConnectionId] = userName;
-
             var uid = await _userService.GetUserIdByUserNameAsync(userName);
             var user = await _userService.GetUserByIdAsync(uid);
 
+            if (user == null)
+            {
+                user = new User { UserName = userName, Email = email, GroupsIds = new List<string>() };
+                await _userService.CreateUserAsync(user);
+            }
 
+            var gids = await _groupService.GetGroupsIds(uid);
+
+            var userGroups = await _groupService.GetUserGroupsAsync(user.GroupsIds);
+            var groupNames = userGroups.Select(g => g.Name).ToList();
+            var groupIds = userGroups.Select(g => g.Id).ToList();
+
+            Console.WriteLine("Group Names: " + string.Join(", ", groupNames));
+            Console.WriteLine("Group IDs: " + string.Join(", ", groupIds));
+            // Send back the user's groups or any other relevant information
+            await Clients.Caller.SendAsync("JoinedRoom", user.GroupsIds, gids);
+
+            // Notify all connected clients that a new user has signed in (if needed)
+            await Clients.All.SendAsync("UserJoined", userName);
+        }
+
+
+        public async Task JoinedRoom2(string roomName, string userName)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
+            _connections[Context.ConnectionId] = userName;
+            var uid = await _userService.GetUserIdByUserNameAsync(userName);
+            var user = await _userService.GetUserByIdAsync(uid);
             //check for the group
             var group = await _groupService.GetGroupByNameAsync(roomName);
             if (group == null)
@@ -62,27 +94,20 @@ namespace SignalRTrial.Hubs
                 await _groupService.CreateGroupAsync(group);
             }
 
-
-            if (user == null)
-            {
-                user = new User { UserName = userName, Groups = new List<string> { roomName } };
-                await _userService.CreateUserAsync(user);
-            }
-
-
             //if the group exists, just add the user to it if it's not a member already
             if (!group.Members.Contains(uid))
             {
                 await _groupService.AddMemberToGroupAsync(group.Id, uid);
             }
-            if (!user.Groups.Contains(roomName))
+            if (!user.GroupsIds.Contains(group.Id))
             {
-                user.Groups.Add(roomName);
+                user.GroupsIds.Add(group.Id);
                 await _userService.UpdateUserAsync(uid, user);
             }
+            var userGroups = await _groupService.GetUserGroupsAsync(user.GroupsIds);
 
 
-            await Clients.Caller.SendAsync("AddToGroupsDiv", user.Groups);
+            await Clients.Caller.SendAsync("AddToGroupsDiv", userGroups.Select(g => g.Name).ToList(), userGroups.Select(g => g.Id).ToList());
 
 
             await Clients.Group(roomName).SendAsync("UserJoined", user.UserName);
@@ -123,6 +148,19 @@ namespace SignalRTrial.Hubs
                 }
             }
         }
+
+        public async Task DeleteGroup(string gid)
+        {
+            var group = await _groupService.GetGroupByIdAsync(gid);
+            var gname = await _groupService.GetGroupByNameAsync(gid);
+            var users = await _userService.GetUsersAsync();
+            foreach (var u in users)
+            {
+                await _userService.ExitFromGroup(gid, u.Id);
+            }
+            await _groupService.DeleteGroupAsync(gid);
+        }
+
         private async Task NotifyGroupMembers(string groupName, string message)
         {
             var notificationMessage = $"New message in group {groupName}: {message}";

@@ -6,14 +6,17 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 
     <title>SignalR App</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 </head>
 <body>
 
 
     <div id="homeScreen">
-        <input type="text" id="userName" placeholder="Username">
-        <input type="text" id="roomName" placeholder="Room">
+        <input type="text" id="userName" placeholder="Enter your username...">
+        <input type="text" id="email" placeholder="Enter your email...">
+        <!--<input type="text" id="roomName" placeholder="Room">-->
         <button id="joinRoom">Join Room</button>
 
     </div>
@@ -21,7 +24,45 @@
     <div id="chatScreen" style="display:none">
         <div class="cont">
 
-            <i class="fa fa-bars userGroups" style="font-size:36px"></i>
+            <div class="topBar">
+                <i class="fa fa-bars userGroups" style="font-size:36px"></i>
+                <button id="addCahr-btn" data-toggle="modal" data-target="#exampleModal" data-whatever="@yourcustomdata">Create Chat</button>
+            </div>
+
+
+
+
+            <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form>
+                                <div class="form-group">
+                                    <label for="group-name" class="col-form-label">Group name:</label>
+                                    <input type="text" class="form-control" id="group-name-input">
+                                </div>
+                                <!--<div class="form-group">
+                                    <label for="message-text" class="col-form-label">Message:</label>
+                                    <textarea class="form-control" id="message-text"></textarea>
+                                </div>-->
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="submit-group">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
             <div class="displayGroups">
                 <div class="groups-div">
                     <ul id="groups-list"></ul>
@@ -43,7 +84,7 @@
                 <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
                     <div class="modal-dialog" role="document">
                         <div class="modal-content" style="display:flex; flex-direction:row;">
-                           
+
 
                             <div class="modal-body" id="alertModalBody">
 
@@ -54,14 +95,14 @@
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-                            
+
                         </div>
                     </div>
                 </div>
 
             </div>
         </div>
-        
+
     </div>
 
 
@@ -69,10 +110,13 @@
 
 
     </script>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-    <!--<script src="NotificationScript.js"></script>-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+
+    <!--    <script src="NotificationScript.js"></script>-->
 </body>
 </html>
