@@ -25,6 +25,14 @@ connection.on("JoinedRoom", function (groups, gids) {
 
     groups.forEach((roomName, index) => {
         const newItem = document.createElement('li');
+        const groupImage = document.createElement('img');
+        groupImage.src = "/groupPhoto.jpg";
+        groupImage.style.marginRight = '10px';
+
+        newItem.className = 'roomName';
+        console.log(newItem.className); 
+
+        newItem.appendChild(groupImage);
         newItem.appendChild(document.createTextNode(roomName));
 
         const icon = document.createElement('i');
@@ -46,7 +54,19 @@ connection.on("JoinedRoom", function (groups, gids) {
                 actions.innerText = "Delete";
                 actions.style.backgroundColor = "red";
                 actions.style.cursor = "pointer";
+                actions.style.zIndex = "1000";
                 actions.style.fontSize = "1rem";
+                actions.style.padding = "10px";
+                actions.style.borderRadius = "4px";
+                actions.style.width = "7rem";
+                actions.style.textAlign = "center";
+                actions.style.color = "white";
+
+                const iconRect = e.target.getBoundingClientRect();
+                actions.style.position = "absolute";
+                actions.style.top = `${iconRect.bottom + window.scrollY}px`;
+                actions.style.left = `${iconRect.left + window.scrollX}px`;
+
                 document.body.appendChild(actions);
 
                 actions.addEventListener("click", function (d) {
@@ -76,27 +96,28 @@ connection.on("JoinedRoom", function (groups, gids) {
 //$.connection.hub.logging = true;
 
 
+document.addEventListener("DOMContentLoaded", function () {
 
-//"keyup" occurs whenever a key is released after being pressed down within the input field
-document.getElementById("messageInput").addEventListener("keyup", function (event) {
-    if (event.key === "Enter") {
-        const message = document.getElementById("messageInput").value;
-        const roomName = document.getElementById("roomName").value;
+    //"keyup" occurs whenever a key is released after being pressed down within the input field
+    document.getElementById("messageInput").addEventListener("keyup", function (event) {
+        if (event.key === "Enter") {
+            const message = document.getElementById("messageInput").value;
+            const roomName = document.getElementById("roomTitle");
+            console.log("Message: ", message);
+            //console.log("room:", roomName.textContent.replace("Room: ", "").trim());
+            if (message && roomName) {
+                connection.invoke("SendMessageToRoom", roomName.textContent.replace("Room: ", "").trim(), message)
+                    .catch(err => console.error(err.toString()));
 
-        if (message && roomName) {
-            connection.invoke("SendMessageToRoom", roomName, message)
-                .catch(err => console.error(err.toString()));
-
-            document.getElementById("messageInput").value = '';
+                document.getElementById("messageInput").value = '';
+            }
         }
-    }
+    });
 });
-
-
 
 document.querySelector(".send-btn").addEventListener("click", () => {
     const message = document.getElementById("messageInput").value;
-    const roomName = document.getElementById("roomName").value;
+    const roomName = document.getElementsByClassName("roomName").value;
 
     if (message && roomName) {
         connection.invoke("SendMessageToRoom", roomName, message)
@@ -160,14 +181,15 @@ connection.on("AddToGroupsDiv", function (groups, gids) {
         console.log(roomName);
 
         const newItem = document.createElement('li');
-        newItem.className = "roomName";
 
         const groupImage = document.createElement('img');
-        groupImage.src = "groupPhoto.jpg";
+        groupImage.src = "/groupPhoto.jpg";
         groupImage.style.marginRight = '10px';
 
         newItem.appendChild(groupImage);
         newItem.appendChild(document.createTextNode(roomName));
+        newItem.className = 'roomName';
+        console.log(newItem.className); 
 
         const icon = document.createElement('i');
         icon.className = "fa-solid fa-ellipsis-vertical";
@@ -180,7 +202,6 @@ connection.on("AddToGroupsDiv", function (groups, gids) {
         icon.addEventListener("click", function (e) {
             e.stopPropagation();//invoking this method prevnts event from reaching any objects other than the current object
 
-           
             const existingDiv = document.querySelector(`.delete-div-${gids[index]}`);
             if (existingDiv) {
                 toggleAction(existingDiv);
@@ -242,9 +263,9 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelector("#groups-list").addEventListener('click', function (e) {
         if (e.target && e.target.nodeName === "LI") {
             const selectedGroup = e.target.textContent.trim();
-            document.getElementById("roomName").value = selectedGroup;
+            console.log(selectedGroup);
+            document.getElementsByClassName("roomName").value = selectedGroup;
             document.getElementById("roomTitle").innerText = `Room: ${selectedGroup}`;
-
             document.getElementById("messages").innerHTML = '';
 
             loadMessages(selectedGroup);
@@ -255,6 +276,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 function loadMessages(roomName) {
+    console.log("loading messages from: ", roomName)
     connection.invoke("LoadMessages", roomName).catch(err => console.log(err.toString()));
 }
 

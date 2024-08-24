@@ -208,15 +208,15 @@ i {
         margin-bottom: 15px;
         padding: 10px;
         cursor: pointer;
-        margin-left: 25px;
+        margin-left: 2px;
         position: relative;
         top: 20px;
         list-style: none;
         transition: all 0.4s ease;
         border-radius: 10px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
+
     }
     
     .groups-div li:hover{
@@ -226,6 +226,8 @@ i {
             padding: 5px;
             border-radius: 10px;
             transition: all 0.4s ease;
+            position: absolute;
+            right: 20px;
         }
     .groups-div li i:hover{
         background-color:gray;
