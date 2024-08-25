@@ -62,5 +62,17 @@ namespace SignalRTrial.Services
             var users = await _users.Find(uids).ToListAsync();
             return users;
         }
+
+        public async Task<List<User>> GetUsersInGroupsAsync(ICollection<string> membersIds)
+        {
+            if (membersIds == null || !membersIds.Any())
+            {
+                return new List<User>(); //return an empty list if null or empty
+            }
+            var uids = Builders<User>.Filter.In(u => u.Id, membersIds);
+            var users = await _users.Find(uids).ToListAsync();
+            return users;
+        }
+
     }
 }

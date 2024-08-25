@@ -4,20 +4,23 @@
         .build();
     connection.start().catch(err => console.error(err.toString()));
 
-
-
 document.getElementById("joinRoom").addEventListener("click", function () {
     const email = document.getElementById("email").value;
     const userName = document.getElementById("userName").value;
 
     if (userName && email) {
-        connection.invoke("JoinedRoom", userName, email).catch(err => console.error(err.toString()));
+        connection.invoke("JoinedRoom", userName, email)
+            .catch(err => console.error(err.toString()));
+
         document.getElementById("homeScreen").style.display = "none";
         document.getElementById("chatScreen").style.display = "block";
     } else {
         alert("Please enter your username and email");
     }
 });
+
+
+
 
 connection.on("JoinedRoom", function (groups, gids) {
     const groupDiv = document.getElementById("groups-list");
@@ -84,18 +87,6 @@ connection.on("JoinedRoom", function (groups, gids) {
 
 
 
-
-
-
-
-
-
-
-
-
-//$.connection.hub.logging = true;
-
-
 document.addEventListener("DOMContentLoaded", function () {
 
     //"keyup" occurs whenever a key is released after being pressed down within the input field
@@ -104,7 +95,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const message = document.getElementById("messageInput").value;
             const roomName = document.getElementById("roomTitle");
             console.log("Message: ", message);
-            //console.log("room:", roomName.textContent.replace("Room: ", "").trim());
+
             if (message && roomName) {
                 connection.invoke("SendMessageToRoom", roomName.textContent.replace("Room: ", "").trim(), message)
                     .catch(err => console.error(err.toString()));
@@ -143,9 +134,6 @@ connection.on("ReceiveMessage", function (msg) {
 });
 
 
-//connection.on("ReceiveMessage", (message) => {
-//    console.log("Message received: " + message);
-//});
 
 connection.on("ReceiveNotification", (notificationMessage) => {
     document.getElementById("alertModalBody").innerHTML = `
@@ -245,7 +233,6 @@ connection.on("AddToGroupsDiv", function (groups, gids) {
 
 
 
-
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelector("#groups-list").addEventListener('click', function (e) {
         if (e.target && e.target.nodeName === "LI") {
@@ -257,36 +244,79 @@ document.addEventListener("DOMContentLoaded", function () {
                 roomNameElements[0].value = selectedGroup;
             }
 
-            const topBar = document.getElementById("roomTitle");
-            topBar.innerText = `Room: ${selectedGroup}`;
-            //topBar.style.backgroundColor = "green";
+            const topBarTitle = document.getElementById("roomTitle");
+            topBarTitle.innerText = `Room: ${selectedGroup}`;
+            console.log("rooom is: ", selectedGroup);
 
-            //check if the button already exists to avoid adding it multiple times
-            if (!document.getElementById("groupMembersBtn")) {
+            document.getElementById("messages").innerHTML = '';
+            loadMessages(selectedGroup);
+            console.log(" 2 . rooom is: ", selectedGroup);
+
+            const existingMembersDiv = document.querySelector(`.membersDiv`);
+            if (existingMembersDiv) {
+                existingMembersDiv.remove();
+            }
+
+            const chatTopBar = document.getElementById("chatTopBar");
+
+            if (!document.getElementById(`groupMembersBtn-${selectedGroup}`)) {
                 const groupMembersBtn = document.createElement('button');
                 groupMembersBtn.id = "groupMembersBtn";
                 groupMembersBtn.innerText = "Members";
-                topBar.appendChild(groupMembersBtn);
-
-
-                document.getElementById("messages").innerHTML = '';
-
-                loadMessages(selectedGroup);
+                chatTopBar.appendChild(groupMembersBtn);
 
                 groupMembersBtn.addEventListener("click", () => {
-                    const membersDiv = document.createElement('div');
-                    membersDiv.style.width = "100px";
-                    membersDiv.style.height = "100px";
-                    membersDiv.innerText = "Group members";
-                    document.body.appendChild(membersDiv);
-                    console.log("i clicked on the members btn!!!");
+                    console.log(`selected grp: ${selectedGroup}`);
+
+                    const existingDiv = document.querySelector(`#membersDiv-${selectedGroup}`);
+                    if (existingDiv) {
+                        toggleAction(existingDiv);
+                    }
+                    else {
+                        getMembers(selectedGroup);
+
+                        const membersDiv = document.createElement('div');
+                        membersDiv.id = `membersDiv-${selectedGroup}`;
+                        membersDiv.className = "membersDiv";
+
+                        const bod = document.getElementsByClassName("cont")[0];
+                        bod.appendChild(membersDiv);
+
+                        console.log("i clicked on the members btn!!!");
+                    }
                 });
             }
         }
     });
 });
 
+connection.on("DisplayMembers", function (membersNames, statuses, selectedGroup) {
+    const membersDiv = document.getElementById(`membersDiv-${selectedGroup}`);
+    if (membersDiv) {
+        membersDiv.innerHTML = '';
 
+       
+
+        membersNames.forEach((m, index) => {
+            const s = statuses[index+1];
+            membersDiv.innerHTML += `
+                <div class="memberInfo">
+                    <div class="member">
+                        <p>${m}</p>
+                        <i class="${s === 'online' ? 'isOnline' : 'isOffline'}"></i>
+                    </div>
+                </div>
+            `;
+        });
+    }
+});
+
+
+function getMembers(groupName) {
+    connection.invoke("LoadMembers", groupName).catch(function (err) {
+        return console.error(err.toString());
+    });
+}
 
 
 
@@ -302,7 +332,7 @@ connection.on("LoadGroupMessages", (msgs) => {
 
 function displayMessages(messages) {
     const messagesDiv = document.getElementById("messages");
-    messagesDiv.innerHTML = ''; // Clear previous messages
+    messagesDiv.innerHTML = '';
 
     messages.forEach(msg => {
         const msgType = msg.userName === document.getElementById("userName").value ? "users" : "others";
@@ -339,8 +369,8 @@ function deleteGroup(roomId) {
 
 
 $('#exampleModal').on('show.bs.modal', function (event) {
-    var button = $(event.relatedTarget); // Button that triggered the modal
-    var recipient = button.data('whatever'); // Extract info from data-* attributes
+    var button = $(event.relatedTarget);
+    var recipient = button.data('whatever');
     var modal = $(this);
     modal.find('.modal-title').text('New message to ' + recipient);
     modal.find('.modal-body input').val(recipient);
@@ -349,7 +379,7 @@ $('#exampleModal').on('show.bs.modal', function (event) {
 document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("submit-group").addEventListener("click", (e) => {
         const grpInput = document.querySelector("#group-name-input");
-        const userName = document.getElementById("userName").value; // Get the userName input value
+        const userName = document.getElementById("userName").value;
         console.log(userName);
 
         if (grpInput && userName) {
@@ -357,7 +387,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             connection.invoke("JoinedRoom2", grpInput.value, userName)
                 .catch(err => console.log(err.toString()));
-            //connection.invoke("JoinedRoom2", grpInput, userName);
         }
         else {
             alert("Please enter a group name or check that you're signed in");

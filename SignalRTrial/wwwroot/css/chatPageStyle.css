@@ -203,6 +203,7 @@ i {
     align-items: center;
     margin-right: 20px;
     margin-bottom: 30px;
+    margin-left: 20px;
     border: none;
 }
     .send-btn:hover {
@@ -308,21 +309,59 @@ i {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-#groupMembersBtn{
-    border-radius:10px;
-    padding:20px;
-    background-color:burlywood;
-    outline:none;
-    border:none;
-    font-size:20px;
-    font-weight:bold;
+#groupMembersBtn {
+    border-radius: 10px;
+    padding: 20px;
+    background-color: burlywood;
+    outline: none;
+    border: none;
+    font-size: 20px;
+    font-weight: bold;
+    position: absolute;
+    right: 2rem;
+    top: 0.7rem;
 }
-/*.delete-div {
+
+.membersDiv {
+    width: 30rem;
+    height: fit-content;
+    position: absolute;
+    top: 5.2rem;
+    right: 7rem;
+    background-color: #b4b4b4;
+    font-size: 1.5rem;
+    padding: 10px 20px;
+    border-radius:10px;
+    transition:all 0.5s ease;
+}
+
+.memberInfo {
     padding: 10px;
-    border-radius: 4px;
-    width: 7rem;
-    text-align: center;
-    color: white;
-    font-size:1rem;
-}*/
-/*border-bottom: 1px solid rgb(174, 174, 174);*/
+    border-radius: 10px;
+    transition: all 0.3s ease-in-out;
+}
+.member {
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    justify-content:space-between;
+    padding: 0;
+}
+.member p {
+    margin-bottom:3px;
+}
+.memberInfo:hover, member p:hover {
+    background-color: aliceblue;
+    cursor: pointer;
+}
+
+.isOnline {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: green;
+}
+.isOffline {
+    background-color: black;
+}

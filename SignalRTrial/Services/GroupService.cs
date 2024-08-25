@@ -59,10 +59,8 @@ namespace SignalRTrial.Services
 
         public async Task<List<Group>> GetUserGroupsAsync(ICollection<string> groupIds)
         {
-            // Filter to find groups that match the provided group IDs
             var filter = Builders<Group>.Filter.In(g => g.Id, groupIds);
 
-            // Retrieve the matching groups from the database
             var groups = await _groups.Find(filter).ToListAsync();
 
             return groups;

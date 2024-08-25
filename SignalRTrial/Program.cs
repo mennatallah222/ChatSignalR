@@ -15,6 +15,17 @@ builder.Services.AddSingleton<IMongoDBSettings>(sp => sp.GetRequiredService<IOpt
 builder.Services.AddSingleton<IMongoClient>(s => new MongoClient(builder.Configuration.GetValue<string>("MongoDBSettings:ConnectionString")));// registers an instance of MongoClient with the DI container as a singleton, so the same instance of MongoClient is used throughout the application
 
 
+builder.Services.AddDistributedMemoryCache(); // In-memory cache for sessions
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Session timeout
+    options.Cookie.HttpOnly = true; // Make the cookie accessible only via HTTP, not JavaScript
+    options.Cookie.IsEssential = true; // Make the session cookie essential
+});
+
+
+
 //register the IMongoDatabase
 builder.Services.AddScoped<IMongoDatabase>(s =>
 {
@@ -49,7 +60,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
-
+app.UseSession();
 app.UseAuthorization();
 
 
