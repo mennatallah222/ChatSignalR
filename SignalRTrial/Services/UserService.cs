@@ -19,7 +19,6 @@ namespace SignalRTrial.Services
 
         public async Task<User> GetUserByIdAsync(string id)
         {
-
             return await _users.Find(u => u.Id == id).FirstOrDefaultAsync();
         }
 

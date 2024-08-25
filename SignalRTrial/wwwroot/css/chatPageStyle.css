@@ -17,6 +17,9 @@
 *{
     outline:none;
 }
+body{
+    margin:0 !important;
+}
 #userName, #email {
     border-radius:20px;
     font-size: 1.5rem;
@@ -33,9 +36,27 @@
     /*padding:20px;*/
 }
 
+#roomTitle {
+    font-size:30px;
+    font-weight:100;
+    width: 114rem;
+    height: 6rem;
+    padding: 30px;
+    display: flex;
+    position: absolute;
+    right: 0;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: space-between;
+    background-color: #f0f0f0;
+    box-shadow: #aaaaaa 0px 1px 0px 0px;
+}
+
+
 #chatScreen{
     display:flex;
     height:100%;
+    /*margin:0px;*/
 }
 
 * {
@@ -79,14 +100,29 @@ body {
     text-align: center;
     align-self:center;
 }
+
+.chatTopBar {
+    position: relative;
+    top: 120px;
+    width: 67%;
+    margin-left: auto;
+    float: right;
+    display: flex;
+    justify-content: space-between;
+}
+
+/*.topBar{
+    position:relative;
+    top:160px;
+}*/
 .groupMessage {
     margin-bottom: 20px;
     font-size: 22px;
     max-width: 60%;
     padding: 14px 20px;
     box-shadow: grey 0px 2px 2px 0px;
-    display:flex;
-    flex-direction:column;
+    display: flex;
+    flex-direction: column;
 }
 #messages {
     display: flex;
@@ -95,9 +131,12 @@ body {
     word-wrap: break-word;
     flex-direction: column;
     align-items: flex-start;
-    width: 70%;
+    width: 80%;
     position: relative;
-    top: 80px;
+    top: 120px;
+    left: 180px;
+    padding: 0 70px;
+    margin-bottom: 82px;
 }
 .textContent {
     word-wrap: break-word;
@@ -115,21 +154,27 @@ body {
     align-self: flex-start;
     border-top-left-radius: 0;
 }
+.inputContainer {
+    display: flex;
+    width: 90%;
+    justify-content: center;
+}
 .input {
     display: flex;
     flex-direction: row;
     padding: 10px 0px 0px 0px;
     background-color: #f0f0f0;
-    position: relative;
-    width: 100%;
+    /*position: relative;*/
+    width: 80%;
+    margin-left: auto;
     box-shadow: #aaaaaa 0px -1px 0px 0px;
     border: none;
     align-items: center;
-    justify-content:center;
+    justify-content: flex-end;
 }
 #messageInput {
-    font-size: 1.7rem;
-    width: 35rem;
+    font-size: 1.4rem;
+    width: 55rem;
     border-radius: 50px;
     padding: 10px 20px;
     outline: none;
@@ -156,7 +201,7 @@ i {
     height: 60px;
     justify-content: center;
     align-items: center;
-    margin-left: 20px;
+    margin-right: 20px;
     margin-bottom: 30px;
     border: none;
 }
@@ -189,16 +234,17 @@ i {
 
 
 .groups-div {
+    display: block !important;
     position: absolute;
     top: 90px;
     left: -40px;
-    width: 400px;
-    height: 87.6%;
+    width: 32rem;
+    height: 92%;
     padding: 10px;
-    border-radius: 10px;
+    /*border-radius: 10px;*/
     border: none;
-    background-color: #808080;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #f0f0f0;
+    box-shadow: #aaaaaa 1px 0px 0px 0px;
     transition: left 0.2s ease;
     z-index: 1;
     display: none;
@@ -218,10 +264,10 @@ i {
         align-items: center;
 
     }
-    
-    .groups-div li:hover{
-        background-color:white;
-    }
+
+        .groups-div li:hover {
+            background-color: #808080;
+        }
         .groups-div li i {
             padding: 5px;
             border-radius: 10px;
@@ -229,6 +275,10 @@ i {
             position: absolute;
             right: 20px;
         }
+
+       /* .groups-div li:active {
+            background-color: #808080;
+        }*/
     .groups-div li i:hover{
         background-color:gray;
     }
@@ -245,7 +295,7 @@ i {
     }
 #addCahr-btn {
     position: absolute;
-    right: 10px;
+    left: 10px;
     top: 20px;
     padding: 20px;
     border-radius: 5px;
@@ -256,6 +306,16 @@ i {
 
 .modal {
     background-color: rgba(0, 0, 0, 0.5);
+}
+
+#groupMembersBtn{
+    border-radius:10px;
+    padding:20px;
+    background-color:burlywood;
+    outline:none;
+    border:none;
+    font-size:20px;
+    font-weight:bold;
 }
 /*.delete-div {
     padding: 10px;

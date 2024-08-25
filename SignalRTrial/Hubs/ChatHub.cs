@@ -132,7 +132,7 @@ namespace SignalRTrial.Hubs
 
             await Clients.Caller.SendAsync("AddToGroupsDiv", userGroups.Select(g => g.Name).ToList(), userGroups.Select(g => g.Id).ToList());
 
-
+            user.Status = "online";
             await Clients.Group(roomName).SendAsync("UserJoined", user.UserName);
         }
 
@@ -154,7 +154,6 @@ namespace SignalRTrial.Hubs
                         Content = message,
                         Timestamp = DateTime.Now
                     };
-
                     // Ensure Messages list is initialized
                     if (group.Messages == null)
                     {

@@ -162,6 +162,7 @@ connection.on("ReceiveNotification", (notificationMessage) => {
 connection.on("UserJoined", function (msg) {
     const messages = document.getElementById("messages");
     messages.innerHTML += `<p class="joinedAndLeftMsg">${msg} has joined the chat</p>`;
+
 });
 
 connection.on("UserLeft", function (msg) {
@@ -243,35 +244,50 @@ connection.on("AddToGroupsDiv", function (groups, gids) {
 
 
 
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelector(".userGroups").addEventListener('click', toggleGroups);
-});
-
-function toggleGroups() {
-    const groupsDiv = document.querySelector(".groups-div");
-    if (groupsDiv.style.display === "" || groupsDiv.style.display === "none") {
-        groupsDiv.style.display = "block";
-    } else {
-        groupsDiv.style.display = "none";
-    }
-    console.log("it is displayed");
-}
 
 
 document.addEventListener("DOMContentLoaded", function () {
-
     document.querySelector("#groups-list").addEventListener('click', function (e) {
         if (e.target && e.target.nodeName === "LI") {
             const selectedGroup = e.target.textContent.trim();
             console.log(selectedGroup);
-            document.getElementsByClassName("roomName").value = selectedGroup;
-            document.getElementById("roomTitle").innerText = `Room: ${selectedGroup}`;
-            document.getElementById("messages").innerHTML = '';
 
-            loadMessages(selectedGroup);
+            const roomNameElements = document.getElementsByClassName("roomName");
+            if (roomNameElements.length > 0) {
+                roomNameElements[0].value = selectedGroup;
+            }
+
+            const topBar = document.getElementById("roomTitle");
+            topBar.innerText = `Room: ${selectedGroup}`;
+            //topBar.style.backgroundColor = "green";
+
+            //check if the button already exists to avoid adding it multiple times
+            if (!document.getElementById("groupMembersBtn")) {
+                const groupMembersBtn = document.createElement('button');
+                groupMembersBtn.id = "groupMembersBtn";
+                groupMembersBtn.innerText = "Members";
+                topBar.appendChild(groupMembersBtn);
+
+
+                document.getElementById("messages").innerHTML = '';
+
+                loadMessages(selectedGroup);
+
+                groupMembersBtn.addEventListener("click", () => {
+                    const membersDiv = document.createElement('div');
+                    membersDiv.style.width = "100px";
+                    membersDiv.style.height = "100px";
+                    membersDiv.innerText = "Group members";
+                    document.body.appendChild(membersDiv);
+                    console.log("i clicked on the members btn!!!");
+                });
+            }
         }
     });
 });
+
+
+
 
 
 
