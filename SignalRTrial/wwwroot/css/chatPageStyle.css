@@ -164,7 +164,7 @@ body {
     flex-direction: row;
     padding: 10px 0px 0px 0px;
     background-color: #f0f0f0;
-    /*position: relative;*/
+    position: relative;
     width: 80%;
     margin-left: auto;
     box-shadow: #aaaaaa 0px -1px 0px 0px;
@@ -309,7 +309,14 @@ i {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-#groupMembersBtn {
+#divOfBtns {
+    display: flex;
+    gap: 20px;
+    right: 0;
+    position: absolute;
+}
+
+#groupMembersBtn, #addMemberBtn {
     border-radius: 10px;
     padding: 20px;
     background-color: burlywood;
@@ -317,7 +324,7 @@ i {
     border: none;
     font-size: 20px;
     font-weight: bold;
-    position: absolute;
+    position: relative;
     right: 2rem;
     top: 0.7rem;
 }

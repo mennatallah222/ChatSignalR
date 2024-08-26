@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using SignalRTrial.Configurations;
 using SignalRTrial.Entities;
 using SignalRTrial.Services;
 using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 
 namespace SignalRTrial.Hubs
 {
@@ -28,55 +30,46 @@ namespace SignalRTrial.Hubs
         //private readonly ConcurrentDictionary<string, string> _connections = new ConcurrentDictionary<string, string>();
 
 
-        private static ConcurrentDictionary<string, string> _connections = new();
+        private static ConcurrentDictionary<string, UserConnectionInfo> _connections = new();
+
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            if (_connections.TryRemove(Context.ConnectionId, out var uid))
+            if (_connections.TryRemove(Context.ConnectionId, out var userInfo))
             {
-                var user = await _userService.GetUserByIdAsync(uid);
+                var user = await _userService.GetUserByIdAsync(userInfo.UserId);
                 if (user != null)
                 {
                     foreach (var group in user.GroupsIds)
                     {
                         await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
-                        await Clients.Group(group).SendAsync("UserLeft", user.UserName);
+                        await Clients.Group(group).SendAsync("UserLeft", userInfo.UserName);
                     }
                 }
             }
             await base.OnDisconnectedAsync(exception);
         }
 
-        //private string GetUserNameFromContext()
-        //{
-        //    // Example method to retrieve the user name from the context
-        //    return Context.User?.Identity?.Name ?? "Unknown";
-        //}
-        //public override async Task OnConnectedAsync()
-        //{
-        //    //making the user status as online
-        //    var userName = GetUserNameFromContext(); // Retrieve the user name from context or other source
+        public override async Task OnConnectedAsync()
+        {
+            await Clients.Caller.SendAsync("WelcomeMessage", "Welcome to the chat!");
 
-        //    // Debugging: Log the connection ID and user name
-        //    Console.WriteLine($"User connected: {userName}, ConnectionId: {Context.ConnectionId}");
-
-        //    // Add the connection ID and user name to the _connections dictionary
-        //    _connections[Context.ConnectionId] = userName;
-
-        //    // Optionally: Add the user to a default group or perform other initialization
-
-        //    // Notify all clients about the new connection
-        //    await Clients.All.SendAsync("UserJoined", userName);
-
-        //    await base.OnConnectedAsync();
-        //}
+            await base.OnConnectedAsync();
+        }
 
 
-        //the sign in
+
         public async Task JoinedRoom(string userName, string email)
         {
             var uid = await _userService.GetUserIdByUserNameAsync(userName);
 
-            _connections[Context.ConnectionId] = uid;
+            var userInfo = new UserConnectionInfo
+            {
+                UserId = uid,
+                ConnectionId = Context.ConnectionId,
+                UserName = userName
+            };
+
+            _connections[Context.ConnectionId] = userInfo;
 
             var user = await _userService.GetUserByIdAsync(uid);
             if (user == null)
@@ -84,42 +77,48 @@ namespace SignalRTrial.Hubs
                 user = new User { UserName = userName, Email = email, GroupsIds = new List<string>() };
                 await _userService.CreateUserAsync(user);
             }
+
             var gids = await _groupService.GetGroupsIds(uid);
             var userGroups = await _groupService.GetUserGroupsAsync(user.GroupsIds);
-
+            await base.OnConnectedAsync();
             user.Status = "online";
             await Clients.Caller.SendAsync("JoinedRoom", userGroups.Select(g => g.Name).ToList(), userGroups.Select(g => g.Id).ToList());
             await Clients.All.SendAsync("UserJoined", userName);
-            await base.OnConnectedAsync();
         }
-
 
         public async Task JoinedRoom2(string roomName, string userName)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
-            var uid = await _userService.GetUserIdByUserNameAsync(userName);
 
-            _connections[Context.ConnectionId] = uid;
+            var uid = await _userService.GetUserIdByUserNameAsync(userName);
+            var userInfo = new UserConnectionInfo
+            {
+                UserId = uid,
+                ConnectionId = Context.ConnectionId,
+                UserName = userName
+            };
+
+            _connections[Context.ConnectionId] = userInfo;
 
             var user = await _userService.GetUserByIdAsync(uid);
-            //check for the group
             var group = await _groupService.GetGroupByNameAsync(roomName);
             if (group == null)
             {
-                group = new Group { Name = roomName, Members = new List<string> { uid } };
+                group = new SignalRTrial.Entities.Group { Name = roomName, Members = new List<string> { uid } };
                 await _groupService.CreateGroupAsync(group);
             }
 
-            //if the group exists, just add the user to it if it's not a member already
             if (!group.Members.Contains(uid))
             {
                 await _groupService.AddMemberToGroupAsync(group.Id, uid);
             }
+
             if (!user.GroupsIds.Contains(group.Id))
             {
                 user.GroupsIds.Add(group.Id);
                 await _userService.UpdateUserAsync(uid, user);
             }
+
             var userGroups = await _groupService.GetUserGroupsAsync(user.GroupsIds);
 
             await Clients.Caller.SendAsync("AddToGroupsDiv", userGroups.Select(g => g.Name).ToList(), userGroups.Select(g => g.Id).ToList());
@@ -130,22 +129,29 @@ namespace SignalRTrial.Hubs
 
         public async Task LoadMembers(string roomName)
         {
-            if (_connections.TryGetValue(Context.ConnectionId, out var userName))
+            if (_connections.TryGetValue(Context.ConnectionId, out var userInfo))
             {
                 var group = await _groupService.GetGroupByNameAsync(roomName);
                 var membersIds = group.Members?.ToList() ?? new List<string>();
                 var membersNames = await _userService.GetUsersInGroupsAsync(membersIds);
 
+                var sanitizedGroupName = SanitizeGroupName(group.Name);
+
                 //sending the members to the groups secreens
-                await Clients.Caller.SendAsync("DisplayMembers", membersNames.Select(m => m.UserName), membersNames.Select(m => m.Status), group.Name);
+                await Clients.Caller.SendAsync("DisplayMembers", membersNames.Select(m => m.UserName), membersNames.Select(m => m.Status), sanitizedGroupName);
             }
+        }
+
+        private string SanitizeGroupName(string groupName)
+        {
+            return Regex.Replace(groupName, @"[^a-zA-Z0-9-_]", "");
         }
 
         public async Task SendMessageToRoom(string roomName, string message)
         {
-            if (_connections.TryGetValue(Context.ConnectionId, out var userName))
+            if (_connections.TryGetValue(Context.ConnectionId, out var userInfo))
             {
-                var uid = await _userService.GetUserIdByUserNameAsync(userName);
+                var uid = userInfo.UserId;
                 var group = await _groupService.GetGroupByNameAsync(roomName);
 
                 if (group != null)
@@ -153,38 +159,38 @@ namespace SignalRTrial.Hubs
                     var msg = new Message
                     {
                         SenderId = uid,
-                        UserName = userName,
+                        UserName = userInfo.UserName,
                         RecieverId = group.Id,
                         GroupId = group.Id,
                         Content = message,
                         Timestamp = DateTime.Now
                     };
-                    // Ensure Messages list is initialized
+
                     if (group.Messages == null)
                     {
                         group.Messages = new List<string>();
                     }
 
-                    group.Messages.Add(msg.Content);
+                    group.Messages.Append(msg.Content);
 
                     await _messageService.CreateMessageAsync(msg);
-                    await Clients.Group(roomName).SendAsync("ReceiveMessage", new { sender = userName, content = message });
+                    await Clients.Group(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message });
                     await NotifyGroupMembers(roomName, message);
                 }
                 else
                 {
-                    // Handle the case where the group does not exist
                     await Clients.Caller.SendAsync("Error", "Group does not exist.");
                 }
             }
         }
 
 
+
         public async Task LoadMessages(string roomName)
         {
-            if (_connections.TryGetValue(Context.ConnectionId, out var userName))
+            if (_connections.TryGetValue(Context.ConnectionId, out var userInfo))
             {
-                var uid = await _userService.GetUserIdByUserNameAsync(userName);
+                var uid = await _userService.GetUserIdByUserNameAsync(userInfo.UserName);
                 var group = await _groupService.GetGroupByNameAsync(roomName);
                 if (group != null)
                 {

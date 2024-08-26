@@ -95,28 +95,38 @@ document.addEventListener("DOMContentLoaded", function () {
             const message = document.getElementById("messageInput").value;
             const roomName = document.getElementById("roomTitle");
             console.log("Message: ", message);
-
+            console.log(`room: ${roomName}`);
             if (message && roomName) {
                 connection.invoke("SendMessageToRoom", roomName.textContent.replace("Room: ", "").trim(), message)
+                   
                     .catch(err => console.error(err.toString()));
+                loadMessages(roomName.textContent.replace("Room: ", "").trim());
 
                 document.getElementById("messageInput").value = '';
+
+               
             }
         }
     });
+
+    document.querySelector(".send-btn").addEventListener("click", () => {
+        const message = document.getElementById("messageInput").value;
+        const roomName = document.getElementById("roomTitle");
+
+        if (message && roomName) {
+            connection.invoke("SendMessageToRoom", roomName.textContent.replace("Room: ", "").trim(), message)
+                .catch(err => console.error(err.toString()));
+
+            loadMessages(roomName.textContent.replace("Room: ", "").trim());
+
+            document.getElementById("messageInput").value = '';
+        }
+    });
+
+
 });
 
-document.querySelector(".send-btn").addEventListener("click", () => {
-    const message = document.getElementById("messageInput").value;
-    const roomName = document.getElementsByClassName("roomName").value;
 
-    if (message && roomName) {
-        connection.invoke("SendMessageToRoom", roomName, message)
-            .catch(err => console.error(err.toString()));
-
-        document.getElementById("messageInput").value = '';
-    }
-});
 
 
 
@@ -220,10 +230,23 @@ connection.on("AddToGroupsDiv", function (groups, gids) {
 
                 actions.addEventListener("click", function (d) {
                     console.log(d.target.id);
+
+                    const chatTopBar = document.getElementById("chatTopBar");
+
+                    if (chatTopBar) {
+                        console.log('Clearing chatTopBar content');
+                        while (chatTopBar.firstChild) {
+                            chatTopBar.removeChild(chatTopBar.firstChild);
+                        }
+                    } else {
+                        console.log('chatTopBar element not found!');
+                    }
+
                     deleteGroup(d.target.id);
                     actions.remove();
                     newItem.remove();
                 });
+
             }
         });
     });
@@ -231,12 +254,16 @@ connection.on("AddToGroupsDiv", function (groups, gids) {
 });
 
 
-
+function sanitizeGroupName(groupName) {
+    return groupName.replace(/[^a-zA-Z0-9-_]/g, "");
+}
 
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelector("#groups-list").addEventListener('click', function (e) {
         if (e.target && e.target.nodeName === "LI") {
             const selectedGroup = e.target.textContent.trim();
+            const sanitizedGroupName = sanitizeGroupName(selectedGroup);
+
             console.log(selectedGroup);
 
             const roomNameElements = document.getElementsByClassName("roomName");
@@ -259,16 +286,33 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const chatTopBar = document.getElementById("chatTopBar");
 
-            if (!document.getElementById(`groupMembersBtn-${selectedGroup}`)) {
+            if (!document.getElementById(`groupMembersBtn-${sanitizedGroupName}`)) {
+
+                const divOfBtns = document.createElement('div');
+                divOfBtns.id = "divOfBtns";
+                divOfBtns.className = "button-container";
+                chatTopBar.appendChild(divOfBtns);
+
                 const groupMembersBtn = document.createElement('button');
                 groupMembersBtn.id = "groupMembersBtn";
                 groupMembersBtn.innerText = "Members";
-                chatTopBar.appendChild(groupMembersBtn);
+                divOfBtns.appendChild(groupMembersBtn);
 
+                const addMember = document.createElement('button');
+                addMember.id = "addMemberBtn";
+                addMember.innerText = "Add Member";
+                // Set data-toggle attribute
+                addMember.setAttribute('data-toggle', 'modal');
+                // Set data-target attribute
+                addMember.setAttribute('data-target', '#addMember');
+                // Append the button to the desired parent element
+                divOfBtns.appendChild(addMember);
+
+                //create group button
                 groupMembersBtn.addEventListener("click", () => {
                     console.log(`selected grp: ${selectedGroup}`);
 
-                    const existingDiv = document.querySelector(`#membersDiv-${selectedGroup}`);
+                    const existingDiv = document.querySelector(`#membersDiv-${sanitizedGroupName}`);
                     if (existingDiv) {
                         toggleAction(existingDiv);
                     }
@@ -276,7 +320,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         getMembers(selectedGroup);
 
                         const membersDiv = document.createElement('div');
-                        membersDiv.id = `membersDiv-${selectedGroup}`;
+                        membersDiv.id = `membersDiv-${sanitizedGroupName}`;
                         membersDiv.className = "membersDiv";
 
                         const bod = document.getElementsByClassName("cont")[0];
@@ -284,7 +328,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         console.log("i clicked on the members btn!!!");
                     }
-                });
+                });   
             }
         }
     });
@@ -381,7 +425,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const grpInput = document.querySelector("#group-name-input");
         const userName = document.getElementById("userName").value;
         console.log(userName);
-
         if (grpInput && userName) {
             console.log(grpInput.value);
 
@@ -391,8 +434,34 @@ document.addEventListener("DOMContentLoaded", function () {
         else {
             alert("Please enter a group name or check that you're signed in");
         }
-
-        
     });
-        
+});
+
+
+
+//add member to group
+$('#addMember').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    var recipient = button.data('whatever');
+    var modal = $(this);
+    modal.find('.modal-title').text('New message to ' + recipient);
+    modal.find('.modal-body input').val(recipient);
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("submit-member").addEventListener("click", (e) => {
+        console.log("clicked on the add member btn");
+        const memberInput = document.querySelector("#member-email-input");
+        const roomName = document.getElementById("roomTitle");
+        console.log(roomName);
+        if (memberInput && userName) {
+            console.log(memberInput.value);
+
+            connection.invoke("JoinedRoom2", roomName.textContent.replace("Room: ", "").trim(), memberInput.value)
+                .catch(err => console.log(err.toString()));
+        }
+        else {
+            alert("Please enter a memberInput name or check that you're signed in");
+        }
+    });
 });

@@ -27,7 +27,7 @@
 
             <div class="topBar">
                 <i class="fa fa-bars userGroups" style="font-size:36px"></i>
-                <button id="addCahr-btn" data-toggle="modal" data-target="#exampleModal" >Create Chat</button>
+                <button id="addCahr-btn" data-toggle="modal" data-target="#exampleModal">Create Chat</button>
             </div>
 
 
@@ -48,10 +48,7 @@
                                     <input type="text" class="form-control" id="group-name-input">
                                 </div>
 
-                                <!--<div class="form-group">
-        <label for="message-text" class="col-form-label">Message:</label>
-        <textarea class="form-control" id="message-text"></textarea>
-    </div>-->
+
                             </form>
                         </div>
                         <div class="modal-footer">
@@ -63,6 +60,33 @@
             </div>
 
 
+
+            <!-- add member to a group -->
+            <div class="modal fade" id="addMember" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form>
+                                <div class="form-group">
+                                    <label for="member-email-input" class="col-form-label">Enter member email:</label>
+                                    <input type="text" class="form-control" id="member-email-input">
+                                </div>
+
+
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="submit-member">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
 
             <div class="displayGroups">
@@ -88,32 +112,32 @@
                     </button>
                 </div>
 
-                    <!-- Modal -->
-                    <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
-                        <div class="modal-dialog" role="document">
-                            <div class="modal-content" style="display:flex; flex-direction:row;">
+                <!-- Modal -->
+                <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content" style="display:flex; flex-direction:row;">
 
 
-                                <div class="modal-body" id="alertModalBody">
+                            <div class="modal-body" id="alertModalBody">
 
-                                    <!-- Notification message will be inserted here -->
-                                </div>
-                                <div style="display:flex;">
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" ">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-
+                                <!-- Notification message will be inserted here -->
                             </div>
+                            <div style="display:flex;">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close" ">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+
                         </div>
                     </div>
-
                 </div>
 
-                <!--</div>-->
-
-
             </div>
+
+            <!--</div>-->
+
+
+        </div>
 
     </div>
 
