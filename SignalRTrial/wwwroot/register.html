@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/authStyle.css">
+    <title>Sign Up or Login</title>
+
+    <link rel="stylesheet" href="./css/chatPageStyle.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <title>SignalR App</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+
+</head>
+<body>
+
+
+    <div id="homeScreen">
+        <div class="auth-btns">
+            <button id="registerBtn">Register</button>
+            <button id="loginBtn">Login</button>
+        </div>
+
+        <div class="auth-inputs">
+            <input type="text" id="userName" placeholder="Enter your username..." class="form-control mb-3">
+            <input type="text" id="email" placeholder="Enter your email..." class="form-control mb-3">
+            <input type="password" id="password" placeholder="Enter your password..." class="form-control mb-3" style="display: none;">
+            <button id="authActionBtn">Join Room</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const registerBtn = document.getElementById('registerBtn');
+            const loginBtn = document.getElementById('loginBtn');
+            const userNameInput = document.getElementById('userName');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const authActionBtn = document.getElementById('authActionBtn');
+
+            registerBtn.addEventListener('click', function () {
+                authActionBtn.textContent = "Register";
+                passwordInput.style.display = "block";
+                emailInput.placeholder = "Enter your email...";
+                userNameInput.placeholder = "Enter your username...";
+            });
+
+            loginBtn.addEventListener('click', function () {
+                authActionBtn.textContent = "Login";
+                passwordInput.style.display = "block";
+                emailInput.placeholder = "Enter your email...";
+                userNameInput.placeholder = "Enter your username...";
+            });
+
+            authActionBtn.addEventListener('click', function () {
+                if (authActionBtn.textContent === "Register") {
+                    console.log("Registering with", userNameInput.value, emailInput.value, passwordInput.value);
+                } else {
+                    console.log("Logging in with", emailInput.value, passwordInput.value);
+                }
+            });
+        });
+    </script>
+
+
+
+    <script src="./js/ChatPageScript.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

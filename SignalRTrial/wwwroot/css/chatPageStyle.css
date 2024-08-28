@@ -16,17 +16,26 @@
 }
 *{
     outline:none;
+    text-decoration:none;
 }
 body{
     margin:0 !important;
 }
-#userName, #email {
-    border-radius:20px;
+
+
+
+
+
+
+
+
+#userName, #email, #password {
+    border-radius: 20px;
     font-size: 1.5rem;
     width: 35rem;
     margin-bottom: 15px;
-    border:none;
-    padding:20px;
+    border: none;
+    padding: 20px;
 }
 #roomName {
     border-radius: 20px;
@@ -71,7 +80,7 @@ body {
 
 .cont {
     display: flex;
-    /*flex: 1;*/
+    flex: 1;
     flex-direction: column;
     align-self: self-end;
     align-items: center;
@@ -192,7 +201,7 @@ i {
     
     
 }
-.send-btn {
+.send-btn, .upload-btn {
     display: flex;
     flex-wrap: wrap;
     border-radius: 12px;
@@ -212,12 +221,14 @@ i {
     }
 
 
+.send-btns {
+    display: flex;
+}
 
-
-.userGroups{
-    align-self:start;
-    margin:40px 0px 0px 40px;
-    cursor:pointer;
+.userGroups {
+    align-self: start;
+    margin: 40px 0px 0px 40px;
+    cursor: pointer;
 }
 
 .modal-backdrop.fade.show {
@@ -371,4 +382,37 @@ i {
 }
 .isOffline {
     background-color: black;
+}
+
+
+
+/****************************************************************/
+
+.auth-btns{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+}
+.auth-btns button{
+    width:16rem;
+    background-color:white;
+    border-radius: 5px !important;
+    transition:all 0.3s ease-in-out;
+}
+.auth-btns button:hover{
+    background-color:antiquewhite;
+}
+.auth-inputs {
+    display: flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction: column;
+    border: none;
+    background-color: antiquewhite;
+    /*border:2px solid black;*/
+    border-radius: 20px;
+    padding: 20px;
+    width:40rem;
+    height:25rem;
 }

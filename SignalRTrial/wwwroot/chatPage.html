@@ -13,15 +13,25 @@
 <body>
 
 
-    <div id="homeScreen">
-        <input type="text" id="userName" placeholder="Enter your username...">
-        <input type="text" id="email" placeholder="Enter your email...">
+    <!--<div id="homeScreen">
+        <div class="auth-btns">
+            <button>Register</button>
+            <button>Login</button>
+        </div>
+
+        <div class="auth-inputs">
+            <input type="text" id="userName" placeholder="Enter your username...">
+            <input type="text" id="email" placeholder="Enter your email...">
+
+            <button id="joinRoom">Join Room</button>
+
+        </div>-->
+        
         <!--<input type="text" id="roomName" placeholder="Room">-->
-        <button id="joinRoom">Join Room</button>
 
-    </div>
+    <!--</div>-->
 
-    <div id="chatScreen" style="display:none">
+    <div id="chatScreen">
 
         <div class="cont">
 
@@ -106,10 +116,21 @@
             <div class="input">
                 <div class="inputContainer">
                     <input type="text" id="messageInput" placeholder="Message" autocomplete="off">
-                    <button class="send-btn">
 
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
+                    <div class="send-btns">
+                        <!-- File Upload Button -->
+                        <input type="file" id="fileInput" style="display:none;" />
+                        <button class="upload-btn" onclick="document.getElementById('fileInput').click();">
+                            <i class="fa-solid fa-paperclip"></i>
+                        </button>
+
+
+                        <button class="send-btn">
+
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    
                 </div>
 
                 <!-- Modal -->

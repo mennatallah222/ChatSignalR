@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <_ContentIncludedByDefault Remove="wwwroot\chatPageStyle.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\register.html" />
   </ItemGroup>
 
   <ItemGroup>

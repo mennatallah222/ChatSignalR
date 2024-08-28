@@ -37,8 +37,12 @@ namespace SignalRTrial.Hubs
             if (_connections.TryRemove(Context.ConnectionId, out var userInfo))
             {
                 var user = await _userService.GetUserByIdAsync(userInfo.UserId);
+
                 if (user != null)
                 {
+                    user.Status = "offline";
+                    await _userService.UpdateUserAsync(userInfo.UserId, user);
+
                     foreach (var group in user.GroupsIds)
                     {
                         await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
@@ -74,12 +78,16 @@ namespace SignalRTrial.Hubs
             var user = await _userService.GetUserByIdAsync(uid);
             if (user == null)
             {
-                user = new User { UserName = userName, Email = email, GroupsIds = new List<string>() };
+                user = new User { UserName = userName, Email = email, GroupsIds = new List<string>(), Status = "online" };
                 await _userService.CreateUserAsync(user);
             }
+            user.Status = "online";
+            await _userService.UpdateUserAsync(userInfo.UserId, user);
 
             var gids = await _groupService.GetGroupsIds(uid);
             var userGroups = await _groupService.GetUserGroupsAsync(user.GroupsIds);
+
+
             await base.OnConnectedAsync();
             user.Status = "online";
             await Clients.Caller.SendAsync("JoinedRoom", userGroups.Select(g => g.Name).ToList(), userGroups.Select(g => g.Id).ToList());
@@ -98,7 +106,7 @@ namespace SignalRTrial.Hubs
                 UserName = userName
             };
 
-            _connections[Context.ConnectionId] = userInfo;
+            //_connections[Context.ConnectionId] = userInfo;
 
             var user = await _userService.GetUserByIdAsync(uid);
             var group = await _groupService.GetGroupByNameAsync(roomName);
