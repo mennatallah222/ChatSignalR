@@ -48,12 +48,12 @@ body{
 #roomTitle {
     font-size:30px;
     font-weight:100;
-    width: 114rem;
+    width: 79.5%;
     height: 6rem;
     padding: 30px;
     display: flex;
     position: absolute;
-    right: 0;
+    right: 0rem;
     flex-wrap: wrap;
     align-content: center;
     justify-content: space-between;
@@ -120,10 +120,7 @@ body {
     justify-content: space-between;
 }
 
-/*.topBar{
-    position:relative;
-    top:160px;
-}*/
+
 .groupMessage {
     margin-bottom: 20px;
     font-size: 22px;
@@ -140,12 +137,12 @@ body {
     word-wrap: break-word;
     flex-direction: column;
     align-items: flex-start;
-    width: 80%;
+    width: 83%;
     position: relative;
     top: 120px;
-    left: 180px;
+    left: 240px;
     padding: 0 70px;
-    margin-bottom: 82px;
+    margin-bottom: 7rem;
 }
 .textContent {
     word-wrap: break-word;
@@ -248,10 +245,10 @@ i {
 .groups-div {
     display: block !important;
     position: absolute;
-    top: 90px;
+    top: 99px;
     left: -40px;
     width: 32rem;
-    height: 92%;
+    height: 90.5vh;
     padding: 10px;
     /*border-radius: 10px;*/
     border: none;
@@ -415,4 +412,36 @@ i {
     padding: 20px;
     width:40rem;
     height:25rem;
+}
+
+@media (max-width: 1245px) {
+    .cont {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-self: self-end;
+        align-items: center;
+        align-content: space-between;
+        height: 100vh;
+        background-size: cover;
+        background-repeat: no-repeat;
+        flex-wrap:wrap;
+    }
+    .groups-div {
+        width: 25%;
+        font-size:smaller;
+    }
+    .groups-div{
+        height:89%;
+    }
+    .groups-div li i{
+        font-size:1rem;
+    }
+    
+    #messages {
+        position: relative;
+        padding: 10px;
+        left: 240px;
+        width:55rem;
+    }
 }

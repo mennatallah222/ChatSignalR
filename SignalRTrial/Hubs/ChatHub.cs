@@ -7,9 +7,6 @@ using System.Text.RegularExpressions;
 
 namespace SignalRTrial.Hubs
 {
-    //public record User(string name, string room);
-    //public record Message(string name, string text);
-    //public record Group(string name);
     public class ChatHub : Hub
     {
         private readonly UserService _userService;
@@ -62,7 +59,7 @@ namespace SignalRTrial.Hubs
 
 
 
-        public async Task JoinedRoom(string userName, string email)
+        public async Task SignUp(string userName, string email)
         {
             var uid = await _userService.GetUserIdByUserNameAsync(userName);
 
@@ -90,11 +87,11 @@ namespace SignalRTrial.Hubs
 
             await base.OnConnectedAsync();
             user.Status = "online";
-            await Clients.Caller.SendAsync("JoinedRoom", userGroups.Select(g => g.Name).ToList(), userGroups.Select(g => g.Id).ToList());
+            await Clients.Caller.SendAsync("SignUp", userGroups.Select(g => g.Name).ToList(), userGroups.Select(g => g.Id).ToList());
             await Clients.All.SendAsync("UserJoined", userName);
         }
 
-        public async Task JoinedRoom2(string roomName, string userName)
+        public async Task JoinedRoom(string roomName, string userName)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
 
@@ -129,9 +126,9 @@ namespace SignalRTrial.Hubs
 
             var userGroups = await _groupService.GetUserGroupsAsync(user.GroupsIds);
 
-            await Clients.Caller.SendAsync("AddToGroupsDiv", userGroups.Select(g => g.Name).ToList(), userGroups.Select(g => g.Id).ToList());
-
-            user.Status = "online";
+            var targetConnectionId = userInfo.ConnectionId;
+            await Clients.Client(targetConnectionId).SendAsync("AddToGroupsDiv", userGroups.Select(g => g.Name).ToList(), userGroups.Select(g => g.Id).ToList());
+            Console.WriteLine($"connection id is:{targetConnectionId}");
             await Clients.Group(roomName).SendAsync("UserJoined", user.UserName);
         }
 

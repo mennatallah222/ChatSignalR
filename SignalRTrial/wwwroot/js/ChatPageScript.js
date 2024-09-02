@@ -39,7 +39,7 @@ function stopConnection() {
 //to invoke JoinedRoom
 function invokeJoinedRoom() {
     if (userName && email) {
-        connection.invoke("JoinedRoom", userName, email)
+        connection.invoke("SignUp", userName, email)
             .catch(err => console.error('Invoke error:', err.toString()));
     }
 }
@@ -96,7 +96,7 @@ if (window.location.pathname === '/chatPage.html') {
 
 
 
-connection.on("JoinedRoom", function (groups, gids) {
+connection.on("SignUp", function (groups, gids) {
     const groupDiv = document.getElementById("groups-list");
     groupDiv.innerHTML = '';
     console.log("we're in the joined room");
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const roomName = document.getElementById("roomTitle");
             console.log("Message: ", message);
             console.log(`room: ${roomName}`);
-            if (message && roomName) {
+            if (message && roomName.textContent.replace("Room: ", "").trim()) {
                 connection.invoke("SendMessageToRoom", roomName.textContent.replace("Room: ", "").trim(), message)
                    
                     .catch(err => console.error(err.toString()));
@@ -377,11 +377,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 const addMember = document.createElement('button');
                 addMember.id = "addMemberBtn";
                 addMember.innerText = "Add Member";
-                // Set data-toggle attribute
                 addMember.setAttribute('data-toggle', 'modal');
-                // Set data-target attribute
+                //setting data-target attribute
                 addMember.setAttribute('data-target', '#addMember');
-                // Append the button to the desired parent element
                 divOfBtns.appendChild(addMember);
 
                 //create group button
@@ -504,7 +502,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (grpInput && userName) {
             console.log(grpInput.value);
 
-            connection.invoke("JoinedRoom2", grpInput.value, userName)
+            connection.invoke("JoinedRoom", grpInput.value, userName)
                 .catch(err => console.log(err.toString()));
         }
         else {
@@ -535,7 +533,7 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("memberInput.value is: ");
             console.log(memberInput.value);
 
-            connection.invoke("JoinedRoom2", roomName.textContent.replace("Room: ", "").trim(), memberInput.value)
+            connection.invoke("JoinedRoom", roomName.textContent.replace("Room: ", "").trim(), memberInput.value)
                 .catch(err => console.log(err.toString()));
         }
         else {
