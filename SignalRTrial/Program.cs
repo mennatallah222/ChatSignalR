@@ -4,6 +4,7 @@ using SignalRTrial.Configurations;
 using SignalRTrial.Hubs;
 using SignalRTrial.Services;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -39,6 +40,11 @@ builder.Services.AddScoped<MessageService>();
 builder.Services.AddScoped<GroupService>();
 
 builder.Services.AddSignalR();
+//.AddStackExchangeRedis("localhost", options =>
+//{
+//    options.Configuration.ChannelPrefix = "chatApp:";
+//});
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

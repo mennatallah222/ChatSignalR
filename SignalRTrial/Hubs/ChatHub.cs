@@ -128,7 +128,7 @@ namespace SignalRTrial.Hubs
 
             var targetConnectionId = userInfo.ConnectionId;
             await Clients.Client(targetConnectionId).SendAsync("AddToGroupsDiv", userGroups.Select(g => g.Name).ToList(), userGroups.Select(g => g.Id).ToList());
-            Console.WriteLine($"connection id is:{targetConnectionId}");
+            Console.WriteLine($"connection id is:{targetConnectionId} and user is: {userInfo.UserName}");
             await Clients.Group(roomName).SendAsync("UserJoined", user.UserName);
         }
 
