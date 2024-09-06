@@ -5,13 +5,13 @@ namespace SignalRTrial.Services
 {
     public class GroupService
     {
-        private readonly IMongoCollection<Group> _groups;
+        private readonly IMongoCollection<GroupChat> _groups;
         public GroupService(IMongoDatabase database)
         {
-            _groups = database.GetCollection<Group>("Groups");
+            _groups = database.GetCollection<GroupChat>("Groups");
         }
 
-        public async Task<Group> CreateGroupAsync(Group group)
+        public async Task<GroupChat> CreateGroupAsync(GroupChat group)
         {
             await _groups.InsertOneAsync(group);
             return group;
@@ -19,7 +19,7 @@ namespace SignalRTrial.Services
 
         public async Task<List<string>> GetGroupsIds(string uid)
         {
-            var filteredGroups = Builders<Group>.Filter.AnyEq(g => g.Members, uid);
+            var filteredGroups = Builders<GroupChat>.Filter.AnyEq(g => g.Members, uid);
             var groups = await _groups.Find(filteredGroups).ToListAsync();
 
             var gids = new List<string>();
@@ -30,25 +30,25 @@ namespace SignalRTrial.Services
             return gids;
         }
 
-        public async Task<Group> GetGroupByIdAsync(string id)
+        public async Task<GroupChat> GetGroupByIdAsync(string id)
         {
             return await _groups.Find(g => g.Id == id).FirstOrDefaultAsync();
         }
 
-        public async Task<Group> GetGroupByNameAsync(string name)
+        public async Task<GroupChat> GetGroupByNameAsync(string name)
         {
             return await _groups.Find(g => g.Name == name).FirstOrDefaultAsync();
         }
 
         public async Task AddMemberToGroupAsync(string gid, string uid)
         {
-            var update = Builders<Group>.Update.Push(g => g.Members, uid);
+            var update = Builders<GroupChat>.Update.Push(g => g.Members, uid);
             await _groups.UpdateOneAsync(g => g.Id == gid, update);
         }
 
         public async Task RemoveMemberFromGroupAsync(string gid, string uid)
         {
-            var update = Builders<Group>.Update.Pull(g => g.Members, uid);
+            var update = Builders<GroupChat>.Update.Pull(g => g.Members, uid);
             await _groups.UpdateOneAsync(g => g.Id == gid, update);
         }
 
@@ -57,13 +57,22 @@ namespace SignalRTrial.Services
             await _groups.DeleteOneAsync(u => u.Id == id);
         }
 
-        public async Task<List<Group>> GetUserGroupsAsync(ICollection<string> groupIds)
+        public async Task<List<GroupChat>> GetUserGroupsAsync(ICollection<string> groupIds)
         {
-            var filter = Builders<Group>.Filter.In(g => g.Id, groupIds);
+            var filter = Builders<GroupChat>.Filter.In(g => g.Id, groupIds);
 
             var groups = await _groups.Find(filter).ToListAsync();
 
             return groups;
+        }
+
+        public async Task UpdateGroupAsync(string gid, GroupChat groupChat)
+        {
+            var filter = Builders<GroupChat>.Filter.Eq(g => g.Id, gid);
+            var update = Builders<GroupChat>.Update
+                .Set(g => g.Name, groupChat.Name)
+                .Set(G => G.Members, groupChat.Members);
+            await _groups.UpdateOneAsync(filter, update);
         }
     }
 }

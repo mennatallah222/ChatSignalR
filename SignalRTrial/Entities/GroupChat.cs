@@ -2,7 +2,7 @@
 
 namespace SignalRTrial.Entities
 {
-    public class Group
+    public class GroupChat
     {
         [BsonId]
         [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
@@ -12,7 +12,7 @@ namespace SignalRTrial.Entities
         public ICollection<string>? Members { get; set; }
         public ICollection<string>? Messages { get; set; }
 
-        public Group()
+        public GroupChat()
         {
             Members = new HashSet<string>();
             Messages = new HashSet<string>();
