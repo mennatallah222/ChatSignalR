@@ -180,6 +180,8 @@ namespace SignalRTrial.Hubs
             return Regex.Replace(groupName, @"[^a-zA-Z0-9-_]", "");
         }
 
+
+        private static Dictionary<string, int> _messageCount = new Dictionary<string, int>();
         public async Task SendMessageToRoom(string roomName, string message)
         {
             if (_connections.TryGetValue(Context.ConnectionId, out var userInfo))
@@ -211,7 +213,14 @@ namespace SignalRTrial.Hubs
                     await _messageService.CreateMessageAsync(msg);
                     //await Clients.Group(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message });
                     await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
-                    await Clients.OthersInGroup(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message });
+
+                    if (!_messageCount.ContainsKey(roomName))
+                    {
+                        _messageCount[roomName] = 0;
+                    }
+                    _messageCount[roomName]++;
+
+                    await Clients.OthersInGroup(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message }, _messageCount[roomName], group.Id);
 
                     Console.WriteLine($"Room is: {group.Name} has message: {msg.Content}");
                     await NotifyGroupMembers(roomName, message);
@@ -259,6 +268,8 @@ namespace SignalRTrial.Hubs
                 if (uinfo != null && uinfo.ConnectionId != null)
                 {
                     await Clients.Client(uinfo.ConnectionId).SendAsync("GroupDeleted", gid);
+                    await Clients.Group(gname).SendAsync("GroupDeleted", gid);
+
                 }
             }
             await _groupService.DeleteGroupAsync(gid);
@@ -269,7 +280,23 @@ namespace SignalRTrial.Hubs
         {
             var notificationMessage = $"New message in group {groupName}: {message}";
 
-            await Clients.OthersInGroup(groupName).SendAsync("ReceiveNotification", notificationMessage);
+            var group = await _groupService.GetGroupByNameAsync(groupName);
+
+            var membersIds = group.Members?.ToList() ?? new List<string>();
+            var users = await _userService.GetUsersInGroupsAsync(membersIds);
+            foreach (var u in users)
+            {
+                //await _userService.ExitFromGroup(gid, u.Id);
+
+                //notifying them in real time
+                var uinfo = _connections.Values.FirstOrDefault(info => info.UserId == u.Id);
+                if (uinfo != null && uinfo.ConnectionId != null)
+                {
+                    await Clients.OthersInGroup(groupName).SendAsync("ReceiveNotification", notificationMessage, group.Name);
+
+                }
+            }
+            //await Clients.OthersInGroup(groupName).SendAsync("ReceiveNotification", notificationMessage);
         }
 
 

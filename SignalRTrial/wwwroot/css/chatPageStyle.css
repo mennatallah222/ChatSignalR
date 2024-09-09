@@ -29,13 +29,13 @@ body{
 
 
 
-#userName, #email, #password {
+#userName, #email {
     border-radius: 20px;
     font-size: 1.5rem;
     width: 35rem;
     margin-bottom: 15px;
     border: none;
-    padding: 20px;
+    padding:30px 20px;
 }
 #roomName {
     border-radius: 20px;
@@ -44,11 +44,13 @@ body{
     border: none;
     /*padding:20px;*/
 }
-
+.roomName p {
+    padding: 0px 30px;
+}
 #roomTitle {
     font-size:30px;
     font-weight:100;
-    width: 79.5%;
+    width: 77.5%;
     height: 6rem;
     padding: 30px;
     display: flex;
@@ -88,6 +90,7 @@ body {
     height: 100vh;
     background-size: cover;
     background-repeat: no-repeat;
+    width:100vw;
 }
 
 .userSpan {
@@ -120,7 +123,12 @@ body {
     justify-content: space-between;
 }
 
-
+#joinRoom {
+    background-color: #128C7E;
+    padding:10px;
+    width:200px;
+    color:white;
+}
 .groupMessage {
     margin-bottom: 20px;
     font-size: 22px;
@@ -137,12 +145,13 @@ body {
     word-wrap: break-word;
     flex-direction: column;
     align-items: flex-start;
-    width: 83%;
+    width: 79%;
     position: relative;
     top: 120px;
-    left: 240px;
+    left: 16rem;
     padding: 0 70px;
     margin-bottom: 7rem;
+    height: 80% !important;
 }
 .textContent {
     word-wrap: break-word;
@@ -180,7 +189,6 @@ body {
 }
 #messageInput {
     font-size: 1.4rem;
-    width: 55rem;
     border-radius: 50px;
     padding: 10px 20px;
     outline: none;
@@ -191,6 +199,7 @@ body {
     word-wrap: break-word; /*for older browsers*/
     white-space: normal;
     border: none;
+    width:70%;
 }
 
 i {
@@ -211,6 +220,7 @@ i {
     margin-bottom: 30px;
     margin-left: 20px;
     border: none;
+    transition:all 0.2s ease;
 }
     .send-btn:hover {
         background-color: #bbbbbb;
@@ -238,10 +248,24 @@ i {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(5px);
     padding-right: 10px;
+    padding:10px 30px;
+    top:30vh !important;
+    font-size:2rem;
+    font-family:'Times New Roman', Times, serif;
+    border-radius:30px !important;
 }
-
-
-
+#member-email-input, #group-name-input {
+    padding: 10px;
+    font-size: 2rem;
+    outline: none;
+}
+.modal-footer button{
+    font-size:20px;
+    padding:10px 20px;
+}
+.modal-footer .btn-primary{
+    background-color:green;
+}
 .groups-div {
     display: block !important;
     position: absolute;
@@ -271,7 +295,7 @@ i {
         border-radius: 10px;
         display: flex;
         align-items: center;
-
+        font-size: 1.5rem;
     }
 
         .groups-div li:hover {
@@ -289,18 +313,30 @@ i {
             background-color: #808080;
         }*/
     .groups-div li i:hover{
-        background-color:gray;
+        background-color:tan;
+        border-radius:50%;
     }
     .groups-div img {
         border-radius: 50%;
         width: 40px;
     }
 
+#search-btn{
+    display:flex;
+    justify-content:center;
+    align-content:center;
+}
+    #search-btn input {
+        padding: 10px;
+        border-radius: 10px;
+        border:none;
+        font-size:24px;
+        width:80%;
+    }
 
-
-    .topBar i{
-        position:absolute;
-        left:0;
+    .topBar i {
+        position: absolute;
+        left: 0;
     }
 #addCahr-btn {
     position: absolute;
@@ -309,7 +345,7 @@ i {
     padding: 20px;
     border-radius: 5px;
     border: none;
-    background-color: burlywood;
+    background-color: #128C7E;
     font-weight: bold;
 }
 
@@ -327,7 +363,7 @@ i {
 #groupMembersBtn, #addMemberBtn {
     border-radius: 10px;
     padding: 20px;
-    background-color: burlywood;
+    background-color: #128C7E;
     outline: none;
     border: none;
     font-size: 20px;
@@ -336,6 +372,7 @@ i {
     right: 2rem;
     top: 0.7rem;
 }
+
 
 .membersDiv {
     width: 30rem;
@@ -346,8 +383,8 @@ i {
     background-color: #b4b4b4;
     font-size: 1.5rem;
     padding: 10px 20px;
-    border-radius:10px;
-    transition:all 0.5s ease;
+    border-radius: 10px;
+    transition: all 0.5s ease;
 }
 
 .memberInfo {
@@ -390,6 +427,7 @@ i {
     justify-content:space-between;
     gap:10px;
     margin-bottom:10px;
+    padding:20px;
 }
 .auth-btns button{
     width:16rem;
@@ -411,7 +449,14 @@ i {
     border-radius: 20px;
     padding: 20px;
     width:40rem;
-    height:25rem;
+    height:20rem;
+}
+
+.fa-check-double{
+    position:relative;
+    bottom:10px;
+    left:70%;
+    opacity:0.5;
 }
 
 @media (max-width: 1245px) {
@@ -425,23 +470,51 @@ i {
         height: 100vh;
         background-size: cover;
         background-repeat: no-repeat;
-        flex-wrap:wrap;
+        flex-wrap: wrap;
     }
+
     .groups-div {
         width: 25%;
-        font-size:smaller;
+        font-size: smaller;
     }
-    .groups-div{
-        height:89%;
+
+    .groups-div {
+        height: 89%;
     }
-    .groups-div li i{
-        font-size:1rem;
-    }
-    
+
+        .groups-div li i {
+            font-size: 1.9rem;
+        }
+
     #messages {
         position: relative;
         padding: 10px;
-        left: 240px;
-        width:55rem;
+        /*left: 260px;
+        top:100px;*/
+        width: 76%;
+        height: 70% !important;
+    }
+}
+.new-msg-badge {
+    background-color: green;
+    border-radius: 10px;
+    padding: 3%;
+    width: 60px;
+    height: 40px;
+    display: flex;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size:20px;
+    font-weight: bold;
+    position: absolute;
+    left: 130px;
+}
+@media (max-width: 1244px) {
+    .input {
+        position: fixed;
+        bottom: 0;
+        left: 20%;
     }
 }

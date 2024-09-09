@@ -104,6 +104,9 @@ if (connection) {
 
         groups.forEach((roomName, index) => {
             const newItem = document.createElement('li');
+            newItem.setAttribute('data-group', gids[index]);
+
+
             const groupImage = document.createElement('img');
             groupImage.src = "/groupPhoto.jpg";
             groupImage.style.marginRight = '10px';
@@ -112,7 +115,12 @@ if (connection) {
             console.log(newItem.className);
 
             newItem.appendChild(groupImage);
-            newItem.appendChild(document.createTextNode(roomName));
+            const groupName = document.createElement('p');
+            groupName.id = `${roomName}`;
+            groupName.innerText = roomName;
+
+            newItem.appendChild(groupName);
+            newItem.className = 'roomName';
 
             const icon = document.createElement('i');
             icon.className = "fa-solid fa-ellipsis-vertical";
@@ -148,7 +156,11 @@ if (connection) {
 
                     document.body.appendChild(actions);
 
-                   
+                    actions.addEventListener("click", function () {
+                        deleteGroup(gids[index]);
+                        actions.remove();
+                        newItem.remove();
+                    });
                 }
             });
         });
@@ -196,35 +208,71 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
-connection.on("ReceiveMessage", function (msg) {
-    console.log("recieved message is: ", msg.content);
-    const messages = document.getElementById("messages");
-    const userName = getUser();
+    connection.on("ReceiveMessage", function (msg, i, gid) {
+        console.log("received index is: ", i); 
+        console.log("received message is: ", msg.content);
+        const messages = document.getElementById("messages");
+        const userName = getUser();
 
-    const msgType = msg.sender === userName ? "users" : "others";
-    messages.innerHTML += `
+        const msgType = msg.sender === userName ? "users" : "others";
+        messages.innerHTML += `
         <div class="groupMessage ${msgType}">
             <span class="userSpan">${msg.sender}</span>
+
+            ${
+                msgType === "users" ?
+                `<i class="fas fa-check-double" style="font-size:24px;"></i> `
+                : ""
+            }
+
             <p class="textContent"><br> ${msg.content}</p>
         </div>
-        `;
-    messages.scrollTop = messages.scrollHeight;
-
-    displayMessage(msg.sender, msg.content);
-});
-
-
-
-
-connection.on("ReceiveNotification", (notificationMessage) => {
-    document.getElementById("alertModalBody").innerHTML = `
-
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <p>${notificationMessage}</p>
-        </div>
     `;
-    $('#alertModal').modal('show');
-    console.log("Notification: " + notificationMessage);
+
+        messages.scrollTop = messages.scrollHeight;
+
+
+        const groupElement = document.querySelector(`#groups-list li[data-group="${gid}"]`);
+        if (groupElement) {
+            let badge = groupElement.querySelector('.new-msg-badge');
+            if (badge) {
+                let currentCount = parseInt(badge.innerText, 10);
+                badge.innerText = `${currentCount + 1}`;
+            } else {
+                badge = document.createElement('span');
+                badge.className = 'new-msg-badge';
+                badge.innerText = `new`;
+                groupElement.appendChild(badge);
+            }
+            
+            if (!groupElement.classList.contains("new-message")) {
+                groupElement.classList.add("new-message");
+            }
+        }
+        displayMessage(msg.sender, msg.content);
+
+        
+    });
+
+
+
+
+    connection.on("ReceiveNotification", (notificationMessage, gname) => {
+
+        const url = new URL(window.location.href);
+        const params = new URLSearchParams(url.search);
+        const chatName = params.get('chat');
+        if (chatName !== gname) {
+            document.getElementById("alertModalBody").innerHTML = `
+
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                  <p>${notificationMessage}</p>
+                </div>
+            `;
+            $('#alertModal').modal('show');
+            console.log("Notification: " + notificationMessage);
+        }
+    
 });
 
 
@@ -248,13 +296,18 @@ connection.on("AddToGroupsDiv", function (groups, gids) {
     
     groups.forEach((roomName, index) => {
         const newItem = document.createElement('li');
+        newItem.setAttribute('data-group', gids[index]);
 
         const groupImage = document.createElement('img');
         groupImage.src = "/groupPhoto.jpg";
         groupImage.style.marginRight = '10px';
 
         newItem.appendChild(groupImage);
-        newItem.appendChild(document.createTextNode(roomName));
+        const groupName = document.createElement('p');
+        groupName.id = `${roomName}`;
+        groupName.innerText = roomName;
+
+        newItem.appendChild(groupName);
         newItem.className = 'roomName';
 
         const icon = document.createElement('i');
@@ -306,7 +359,7 @@ function sanitizeGroupName(groupName) {
 
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelector("#groups-list").addEventListener('click', function (e) {
-        if (e.target && e.target.nodeName === "LI") {
+        if (e.target && e.target.nodeName === "P") {
             const selectedGroup = e.target.textContent.trim();
             const sanitizedGroupName = sanitizeGroupName(selectedGroup);
 
@@ -317,8 +370,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 roomNameElements[0].value = selectedGroup;
             }
 
+            
+            let badge = document.querySelector('.new-msg-badge');
+            if (badge) {
+                badge.remove();
+            }
+            
+
+
+
             const topBarTitle = document.getElementById("roomTitle");
             topBarTitle.innerText = `Room: ${selectedGroup}`;
+
+            const newUrl = `${window.location.origin}${window.location.pathname}?chat=${encodeURIComponent(sanitizedGroupName)}`;
+            history.pushState({ group: sanitizedGroupName }, '', newUrl);
+
             console.log("rooom is: ", selectedGroup);
 
             document.getElementById("messages").innerHTML = '';
@@ -428,6 +494,12 @@ function displayMessages(messages) {
             <div class="groupMessage ${msgType}">
                 <span class="userSpan">${msg.userName}</span>
                 <p class="textContent"><br>${msg.content}</p>
+                ${
+                    msgType === "users"? 
+                        `<i class="fas fa-check-double" style="font-size:24px;"></i> `
+                    :""
+                }
+            
             </div>
         `;
     });
@@ -520,6 +592,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const groupToDelete = Array.from(groupDiv.children).find(item => item.querySelector('i').id === gid);
         if (groupToDelete) groupToDelete.remove();
     });
+
+
+    function getCurrentRoomName() {
+        const roomName = document.getElementById("roomTitle");
+        return roomName.textContent.replace("Room: ", "").trim()
+    }
 }
 
 
