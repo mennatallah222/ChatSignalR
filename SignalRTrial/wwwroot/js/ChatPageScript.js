@@ -89,7 +89,7 @@ function getEmail() {
 if (window.location.pathname === '/chat.html') {
     userName = getUser();
     email = getEmail();
-    
+
     startConnection();
 }
 
@@ -169,65 +169,79 @@ if (connection) {
 
 
 
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
 
-    //"keyup" occurs whenever a key is released after being pressed down within the input field
-    document.getElementById("messageInput").addEventListener("keyup", function (event) {
-        if (event.key === "Enter") {
+        //"keyup" occurs whenever a key is released after being pressed down within the input field
+        document.getElementById("messageInput").addEventListener("keyup", function (event) {
+            if (event.key === "Enter") {
+                const message = document.getElementById("messageInput").value;
+                const roomName = document.getElementById("roomTitle");
+                console.log("Message: ", message);
+                console.log(`room: ${roomName}`);
+                if (message && roomName.textContent.replace("Room: ", "").trim()) {
+                    connection.invoke("SendMessageToRoom", roomName.textContent.replace("Room: ", "").trim(), message)
+
+                        .catch(err => console.error(err.toString()));
+                    loadMessages(roomName.textContent.replace("Room: ", "").trim());
+                    console.log(`roommmmmmmmmmmmm: ${roomName.textContent.replace("Room: ", "").trim()}`);
+                    document.getElementById("messageInput").value = '';
+
+
+                }
+            }
+        });
+
+        document.querySelector(".send-btn").addEventListener("click", () => {
             const message = document.getElementById("messageInput").value;
             const roomName = document.getElementById("roomTitle");
-            console.log("Message: ", message);
-            console.log(`room: ${roomName}`);
-            if (message && roomName.textContent.replace("Room: ", "").trim()) {
+
+            if (message && roomName) {
                 connection.invoke("SendMessageToRoom", roomName.textContent.replace("Room: ", "").trim(), message)
-                   
                     .catch(err => console.error(err.toString()));
+
                 loadMessages(roomName.textContent.replace("Room: ", "").trim());
-                console.log(`roommmmmmmmmmmmm: ${roomName.textContent.replace("Room: ", "").trim() }`);
+
                 document.getElementById("messageInput").value = '';
-
-               
             }
-        }
+        });
+
+
     });
 
-    document.querySelector(".send-btn").addEventListener("click", () => {
-        const message = document.getElementById("messageInput").value;
-        const roomName = document.getElementById("roomTitle");
-
-        if (message && roomName) {
-            connection.invoke("SendMessageToRoom", roomName.textContent.replace("Room: ", "").trim(), message)
-                .catch(err => console.error(err.toString()));
-
-            loadMessages(roomName.textContent.replace("Room: ", "").trim());
-
-            document.getElementById("messageInput").value = '';
-        }
-    });
-
-
-});
-
-    connection.on("ReceiveMessage", function (msg, i, gid) {
-        console.log("received index is: ", i); 
+    connection.on("ReceiveMessage", function (msg, i, gid, gname) {
+        console.log("received index is: ", i);
         console.log("received message is: ", msg.content);
         const messages = document.getElementById("messages");
         const userName = getUser();
 
+        const time = getRelativeTime(msg.timestamp);
+
         const msgType = msg.sender === userName ? "users" : "others";
-        messages.innerHTML += `
+
+        const url = new URL(window.location.href);
+        const params = new URLSearchParams(url.search);
+        const chatName = params.get('chat');
+        if (chatName === gname) {
+            messages.innerHTML += `
         <div class="groupMessage ${msgType}">
             <span class="userSpan">${msg.sender}</span>
 
-            ${
-                msgType === "users" ?
-                `<i class="fas fa-check-double" style="font-size:24px;"></i> `
-                : ""
-            }
+            <div id="forFlex">
+                ${msgType === "users" ?
+                    `<i class="fas fa-check-double" style="font-size:24px;"></i> `
+                    : ""
+                }
+             <p class="textTime"><br> ${time || ""}</p>
+
+            </div>
+
+            
 
             <p class="textContent"><br> ${msg.content}</p>
+
         </div>
     `;
+        }
 
         messages.scrollTop = messages.scrollHeight;
 
@@ -244,14 +258,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 badge.innerText = `new`;
                 groupElement.appendChild(badge);
             }
-            
+
             if (!groupElement.classList.contains("new-message")) {
                 groupElement.classList.add("new-message");
             }
         }
         displayMessage(msg.sender, msg.content);
 
-        
+
     });
 
 
@@ -272,188 +286,188 @@ document.addEventListener("DOMContentLoaded", function () {
             $('#alertModal').modal('show');
             console.log("Notification: " + notificationMessage);
         }
-    
-});
+
+    });
 
 
-connection.on("UserJoined", function (msg) {
-    const messages = document.getElementById("messages");
-    messages.innerHTML += `<p class="joinedAndLeftMsg">${msg} has joined the chat</p>`;
+    connection.on("UserJoined", function (msg) {
+        const messages = document.getElementById("messages");
+        messages.innerHTML += `<p class="joinedAndLeftMsg">${msg} has joined the chat</p>`;
 
-});
+    });
 
-connection.on("UserLeft", function (msg) {
-    const messages = document.getElementById("messages");
-    messages.innerHTML += `<p class="joinedAndLeftMsg">${msg} has left the chat</p>`;
-});
+    connection.on("UserLeft", function (msg) {
+        const messages = document.getElementById("messages");
+        messages.innerHTML += `<p class="joinedAndLeftMsg">${msg} has left the chat</p>`;
+    });
 
-connection.on("AddToGroupsDiv", function (groups, gids) {
-    console.log("Groups:", groups);
-    console.log("Group IDs:", gids);
+    connection.on("AddToGroupsDiv", function (groups, gids) {
+        console.log("Groups:", groups);
+        console.log("Group IDs:", gids);
 
-    const groupDiv = document.getElementById("groups-list");
-    groupDiv.innerHTML = '';
-    
-    groups.forEach((roomName, index) => {
-        const newItem = document.createElement('li');
-        newItem.setAttribute('data-group', gids[index]);
+        const groupDiv = document.getElementById("groups-list");
+        groupDiv.innerHTML = '';
 
-        const groupImage = document.createElement('img');
-        groupImage.src = "/groupPhoto.jpg";
-        groupImage.style.marginRight = '10px';
+        groups.forEach((roomName, index) => {
+            const newItem = document.createElement('li');
+            newItem.setAttribute('data-group', gids[index]);
 
-        newItem.appendChild(groupImage);
-        const groupName = document.createElement('p');
-        groupName.id = `${roomName}`;
-        groupName.innerText = roomName;
+            const groupImage = document.createElement('img');
+            groupImage.src = "/groupPhoto.jpg";
+            groupImage.style.marginRight = '10px';
 
-        newItem.appendChild(groupName);
-        newItem.className = 'roomName';
+            newItem.appendChild(groupImage);
+            const groupName = document.createElement('p');
+            groupName.id = `${roomName}`;
+            groupName.innerText = roomName;
 
-        const icon = document.createElement('i');
-        icon.className = "fa-solid fa-ellipsis-vertical";
-        icon.id = gids[index];
-        icon.style.float = 'right';
-        newItem.appendChild(icon);
+            newItem.appendChild(groupName);
+            newItem.className = 'roomName';
 
-        groupDiv.appendChild(newItem);
-        
-        icon.addEventListener("click", function (e) {
-            e.stopPropagation();
+            const icon = document.createElement('i');
+            icon.className = "fa-solid fa-ellipsis-vertical";
+            icon.id = gids[index];
+            icon.style.float = 'right';
+            newItem.appendChild(icon);
 
-            const existingDiv = document.querySelector(`.delete-div-${gids[index]}`);
-            if (existingDiv) {
-                toggleAction(existingDiv);
-            }
-            else {
-                const actions = document.createElement("div");
-                actions.className = `delete-div-${gids[index]}`;
-                actions.innerText = "Delete";
-                actions.style.backgroundColor = "red";
-                actions.style.cursor = "pointer";
-                actions.style.zIndex = "1000";
-                actions.style.fontSize = "1rem";
-                actions.style.padding = "10px";
-                actions.style.borderRadius = "4px";
-                actions.style.width = "7rem";
-                actions.style.textAlign = "center";
-                actions.style.color = "white";
+            groupDiv.appendChild(newItem);
 
-                document.body.appendChild(actions);
-                
-                actions.addEventListener("click", function () {
-                    deleteGroup(gids[index]);
-                    actions.remove();
-                    newItem.remove();
-                });
+            icon.addEventListener("click", function (e) {
+                e.stopPropagation();
+
+                const existingDiv = document.querySelector(`.delete-div-${gids[index]}`);
+                if (existingDiv) {
+                    toggleAction(existingDiv);
+                }
+                else {
+                    const actions = document.createElement("div");
+                    actions.className = `delete-div-${gids[index]}`;
+                    actions.innerText = "Delete";
+                    actions.style.backgroundColor = "red";
+                    actions.style.cursor = "pointer";
+                    actions.style.zIndex = "1000";
+                    actions.style.fontSize = "1rem";
+                    actions.style.padding = "10px";
+                    actions.style.borderRadius = "4px";
+                    actions.style.width = "7rem";
+                    actions.style.textAlign = "center";
+                    actions.style.color = "white";
+
+                    document.body.appendChild(actions);
+
+                    actions.addEventListener("click", function () {
+                        deleteGroup(gids[index]);
+                        actions.remove();
+                        newItem.remove();
+                    });
+                }
+            });
+        });
+    });
+
+
+
+    function sanitizeGroupName(groupName) {
+        return groupName.replace(/[^a-zA-Z0-9-_]/g, "");
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelector("#groups-list").addEventListener('click', function (e) {
+            if (e.target && e.target.nodeName === "P") {
+                const selectedGroup = e.target.textContent.trim();
+                const sanitizedGroupName = sanitizeGroupName(selectedGroup);
+
+                console.log(selectedGroup);
+
+                const roomNameElements = document.getElementsByClassName("roomName");
+                if (roomNameElements.length > 0) {
+                    roomNameElements[0].value = selectedGroup;
+                }
+
+
+                let badge = document.querySelector('.new-msg-badge');
+                if (badge) {
+                    badge.remove();
+                }
+
+
+
+
+                const topBarTitle = document.getElementById("roomTitle");
+                topBarTitle.innerText = `Room: ${selectedGroup}`;
+
+                const newUrl = `${window.location.origin}${window.location.pathname}?chat=${encodeURIComponent(sanitizedGroupName)}`;
+                history.pushState({ group: sanitizedGroupName }, '', newUrl);
+
+                console.log("rooom is: ", selectedGroup);
+
+                document.getElementById("messages").innerHTML = '';
+                loadMessages(selectedGroup);
+                console.log(" 2 . rooom is: ", selectedGroup);
+
+                const existingMembersDiv = document.querySelector(`.membersDiv`);
+                if (existingMembersDiv) {
+                    existingMembersDiv.remove();
+                }
+
+                const chatTopBar = document.getElementById("chatTopBar");
+
+                if (!document.getElementById(`groupMembersBtn-${sanitizedGroupName}`)) {
+
+                    const divOfBtns = document.createElement('div');
+                    divOfBtns.id = "divOfBtns";
+                    divOfBtns.className = "button-container";
+                    chatTopBar.appendChild(divOfBtns);
+
+                    const groupMembersBtn = document.createElement('button');
+                    groupMembersBtn.id = "groupMembersBtn";
+                    groupMembersBtn.innerText = "Members";
+                    divOfBtns.appendChild(groupMembersBtn);
+
+                    const addMember = document.createElement('button');
+                    addMember.id = "addMemberBtn";
+                    addMember.innerText = "Add Member";
+                    addMember.setAttribute('data-toggle', 'modal');
+                    //setting data-target attribute
+                    addMember.setAttribute('data-target', '#addMember');
+                    divOfBtns.appendChild(addMember);
+
+                    //create group button
+                    groupMembersBtn.addEventListener("click", () => {
+                        console.log(`selected grp: ${selectedGroup}`);
+
+                        const existingDiv = document.querySelector(`#membersDiv-${sanitizedGroupName}`);
+                        if (existingDiv) {
+                            toggleAction(existingDiv);
+                        }
+                        else {
+                            getMembers(selectedGroup);
+
+                            const membersDiv = document.createElement('div');
+                            membersDiv.id = `membersDiv-${sanitizedGroupName}`;
+                            membersDiv.className = "membersDiv";
+
+                            const bod = document.getElementsByClassName("cont")[0];
+                            bod.appendChild(membersDiv);
+
+                            console.log("i clicked on the members btn!!!");
+                        }
+                    });
+                }
             }
         });
     });
-});
+
+    connection.on("DisplayMembers", function (membersNames, statuses, selectedGroup) {
+        const membersDiv = document.getElementById(`membersDiv-${selectedGroup}`);
+        if (membersDiv) {
+            membersDiv.innerHTML = '';
 
 
 
-function sanitizeGroupName(groupName) {
-    return groupName.replace(/[^a-zA-Z0-9-_]/g, "");
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-    document.querySelector("#groups-list").addEventListener('click', function (e) {
-        if (e.target && e.target.nodeName === "P") {
-            const selectedGroup = e.target.textContent.trim();
-            const sanitizedGroupName = sanitizeGroupName(selectedGroup);
-
-            console.log(selectedGroup);
-
-            const roomNameElements = document.getElementsByClassName("roomName");
-            if (roomNameElements.length > 0) {
-                roomNameElements[0].value = selectedGroup;
-            }
-
-            
-            let badge = document.querySelector('.new-msg-badge');
-            if (badge) {
-                badge.remove();
-            }
-            
-
-
-
-            const topBarTitle = document.getElementById("roomTitle");
-            topBarTitle.innerText = `Room: ${selectedGroup}`;
-
-            const newUrl = `${window.location.origin}${window.location.pathname}?chat=${encodeURIComponent(sanitizedGroupName)}`;
-            history.pushState({ group: sanitizedGroupName }, '', newUrl);
-
-            console.log("rooom is: ", selectedGroup);
-
-            document.getElementById("messages").innerHTML = '';
-            loadMessages(selectedGroup);
-            console.log(" 2 . rooom is: ", selectedGroup);
-
-            const existingMembersDiv = document.querySelector(`.membersDiv`);
-            if (existingMembersDiv) {
-                existingMembersDiv.remove();
-            }
-
-            const chatTopBar = document.getElementById("chatTopBar");
-
-            if (!document.getElementById(`groupMembersBtn-${sanitizedGroupName}`)) {
-
-                const divOfBtns = document.createElement('div');
-                divOfBtns.id = "divOfBtns";
-                divOfBtns.className = "button-container";
-                chatTopBar.appendChild(divOfBtns);
-
-                const groupMembersBtn = document.createElement('button');
-                groupMembersBtn.id = "groupMembersBtn";
-                groupMembersBtn.innerText = "Members";
-                divOfBtns.appendChild(groupMembersBtn);
-
-                const addMember = document.createElement('button');
-                addMember.id = "addMemberBtn";
-                addMember.innerText = "Add Member";
-                addMember.setAttribute('data-toggle', 'modal');
-                //setting data-target attribute
-                addMember.setAttribute('data-target', '#addMember');
-                divOfBtns.appendChild(addMember);
-
-                //create group button
-                groupMembersBtn.addEventListener("click", () => {
-                    console.log(`selected grp: ${selectedGroup}`);
-
-                    const existingDiv = document.querySelector(`#membersDiv-${sanitizedGroupName}`);
-                    if (existingDiv) {
-                        toggleAction(existingDiv);
-                    }
-                    else {
-                        getMembers(selectedGroup);
-
-                        const membersDiv = document.createElement('div');
-                        membersDiv.id = `membersDiv-${sanitizedGroupName}`;
-                        membersDiv.className = "membersDiv";
-
-                        const bod = document.getElementsByClassName("cont")[0];
-                        bod.appendChild(membersDiv);
-
-                        console.log("i clicked on the members btn!!!");
-                    }
-                });   
-            }
-        }
-    });
-});
-
-connection.on("DisplayMembers", function (membersNames, statuses, selectedGroup) {
-    const membersDiv = document.getElementById(`membersDiv-${selectedGroup}`);
-    if (membersDiv) {
-        membersDiv.innerHTML = '';
-
-       
-
-        membersNames.forEach((m, index) => {
-            const s = statuses[index+1];
-            membersDiv.innerHTML += `
+            membersNames.forEach((m, index) => {
+                const s = statuses[index + 1];
+                membersDiv.innerHTML += `
                 <div class="memberInfo">
                     <div class="member">
                         <p>${m}</p>
@@ -461,100 +475,192 @@ connection.on("DisplayMembers", function (membersNames, statuses, selectedGroup)
                     </div>
                 </div>
             `;
+            });
+        }
+    });
+
+
+    function getMembers(groupName) {
+        connection.invoke("LoadMembers", groupName).catch(function (err) {
+            return console.error(err.toString());
         });
     }
-});
 
 
-function getMembers(groupName) {
-    connection.invoke("LoadMembers", groupName).catch(function (err) {
-        return console.error(err.toString());
+
+
+    function loadMessages(roomName) {
+        console.log("loading messages from: ", roomName)
+        connection.invoke("LoadMessages", roomName).catch(err => console.log(err.toString()));
+    }
+
+    connection.on("LoadGroupMessages", (msgs) => {
+        displayMessages(msgs);
     });
-}
 
 
+    function getRelativeTime(timestamp) {
+        const now = new Date();
+        const then = new Date(timestamp);
+        const diffInSeconds = Math.floor((now - then) / 1000);
+
+        const seconds = Math.floor(diffInSeconds % 60);
+        const minutes = Math.floor((diffInSeconds / 60) % 60);
+        const hours = Math.floor((diffInSeconds / 3600) % 24);
+        const days = Math.floor(diffInSeconds / 86400);
+
+        if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+        if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+        if (seconds > 0) return `${seconds} second${seconds > 1 ? 's' : ''} ago`;
+
+        return 'just now';
+    }
 
 
-function loadMessages(roomName) {
-    console.log("loading messages from: ", roomName)
-    connection.invoke("LoadMessages", roomName).catch(err => console.log(err.toString()));
-}
+    function displayMessages(messages) {
+        const messagesDiv = document.getElementById("messages");
+        messagesDiv.innerHTML = '';
 
-connection.on("LoadGroupMessages", (msgs) => {
-    displayMessages(msgs);
-});
-
-function displayMessages(messages) {
-    const messagesDiv = document.getElementById("messages");
-    messagesDiv.innerHTML = '';
-
-    messages.forEach(msg => {
-        const msgType = msg.userName === getUser() ? "users" : "others";
-        messagesDiv.innerHTML += `
-            <div class="groupMessage ${msgType}">
-                <span class="userSpan">${msg.userName}</span>
-                <p class="textContent"><br>${msg.content}</p>
-                ${
-                    msgType === "users"? 
-                        `<i class="fas fa-check-double" style="font-size:24px;"></i> `
-                    :""
+        messages.forEach((msg, index) => {
+            const time = getRelativeTime(msg.timestamp);
+            const msgType = msg.userName === getUser() ? "users" : "others";
+            messagesDiv.innerHTML += `
+            <div class="groupMessage ${msgType}" id="message-${index}">
+                <div id="forUpperFlex">
+                    ${msgType === "users" ?
+                    ` <i class="msg-actions fa-solid fa-ellipsis-vertical" data-index="${index}" style:"cursor:pointer;"></i>`
+                    : ''
                 }
-            
+                    <span class="userSpan">${msg.userName}</span>
+                </div>
+
+                <p class="textContent"><br>${msg.content}</p>
+
+                <div id="forFlex">
+                    ${msgType === "users" ?
+                    `<i class="fas fa-check-double" style="font-size:24px;"></i> `
+                    : ""
+                }
+                     <p class="textTime"><br> ${time || ""}</p>
+                </div>
+
+                ${msgType === "users" ?
+                    `
+                        <div class="msg-options" id="msg-options-${index}" style="display:none;">
+                            <button class="edit-btn" data-id="${msg.id}" data-index="${index}">Edit</button>
+                            <button class="delete-btn" data-id="${msg.id}" data-index="${index}">Delete</button>
+                        </div>
+                    `
+                    : ""
+                }
             </div>
         `;
-    });
+        });
 
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
+        //to toggle visibility of options
+        document.querySelectorAll('.msg-actions').forEach(icon => {
+            icon.addEventListener('click', function () {
+                const index = this.getAttribute('data-index');
+                toggleOptions(index);
+            });
+        });
 
+        //event listeners for edit buttons
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const msgId = this.getAttribute('data-id');
+                console.log(`Edit message with ID: ${msgId}`);
+            });
+        });
 
-function toggleAction(div) {
-    if (div.style.display === "" || div.style.display === "none") {
-        div.style.display = "block";
-    } else {
-        div.style.display = "none";
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const msgId = this.getAttribute('data-id');
+                //console.log(`Delete message with ID: ${msgId}`);
+
+                const index = this.getAttribute('data-index');
+                //console.log(`Index of message : ${index}`);
+                const roomName = document.getElementById("roomTitle");
+                //console.log(`roommmmmmmmmmmmm in deletemessage: ${roomName.textContent.replace("Room: ", "").trim()}`);
+
+                deleteMessage(roomName.textContent.replace("Room: ", "").trim(), msgId);
+
+                const msgObj = document.getElementById(`message-${index}`);
+                //console.log(msgObj);
+                msgObj.remove();
+
+            });
+        });
+
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
-    console.log("it is toggled");
-}
 
-
-function deleteGroup(roomId) {
-    connection.invoke("DeleteGroup", roomId).catch(err => console.log(err.toString()));
-}
-
-
-
-
-
-
-
-$('#exampleModal').on('show.bs.modal', function (event) {
-    var button = $(event.relatedTarget);
-    var recipient = button.data('whatever');
-    var modal = $(this);
-    modal.find('.modal-title').text('New message to ' + recipient);
-    modal.find('.modal-body input').val(recipient);
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("submit-group").addEventListener("click", (e) => {
-        const grpInput = document.querySelector("#group-name-input");
-        const userName = getUser();
-        console.log("Added the user to group", userName);
-        console.log(userName);
-        if (grpInput && userName) {
-            console.log(grpInput.value);
-
-            connection.invoke("JoinedRoom", grpInput.value, userName)
-                .catch(err => console.log(err.toString()));
+    function toggleOptions(index) {
+        const optionsDiv = document.getElementById(`msg-options-${index}`);
+        if (optionsDiv.style.display === 'none') {
+            optionsDiv.style.display = 'block';
+        } else {
+            optionsDiv.style.display = 'none';
         }
-        else {
-            alert("Please enter a group name or check that you're signed in");
+    }
+
+    function toggleAction(div) {
+        if (div.style.display === "" || div.style.display === "none") {
+            div.style.display = "block";
+        } else {
+            div.style.display = "none";
         }
+        console.log("it is toggled");
+    }
+
+
+    function deleteGroup(roomId) {
+        connection.invoke("DeleteGroup", roomId).catch(err => console.log(err.toString()));
+    }
+
+    function deleteMessage(roomId, msgId) {
+        connection.invoke("DeleteMessage", roomId, msgId).catch(err => console.log(err.toString()));
+    }
+
+
+
+
+
+
+
+    $('#exampleModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var recipient = button.data('whatever');
+        var modal = $(this);
+        modal.find('.modal-title').text('New message to ' + recipient);
+        modal.find('.modal-body input').val(recipient);
     });
-});
 
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("submit-group").addEventListener("click", (e) => {
+            const grpInput = document.querySelector("#group-name-input");
+            const userName = getUser();
+            console.log("Added the user to group", userName);
+            console.log(userName);
+            if (grpInput && userName) {
+                console.log(grpInput.value);
 
+                connection.invoke("JoinedRoom", grpInput.value, userName)
+                    .catch(err => console.log(err.toString()));
+            }
+            else {
+                alert("Please enter a group name or check that you're signed in");
+            }
+        });
+    });
+
+    connection.on("MessageDeleted", function (mid) {
+        console.log("MessageDeleted: ", mid);
+        const msgDiv = document.getElementById("groups-list");
+        const msgToDelete = Array.from(msgDiv.children).find(item => item.querySelector('i').id === mid);
+        if (msgToDelete) msgToDelete.remove();
+    });
 
     //add member to group
     $('#addMember').on('show.bs.modal', function (event) {

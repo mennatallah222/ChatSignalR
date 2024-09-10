@@ -98,6 +98,7 @@ body {
     background-color: ButtonFace;
     padding:7px;
     font-size:1.5rem;
+    margin-right:10px;
 }
 .userSpan, .groupMessage {
     border-radius: 10px;
@@ -145,12 +146,12 @@ body {
     word-wrap: break-word;
     flex-direction: column;
     align-items: flex-start;
-    width: 79%;
+    width: 75%;
     position: relative;
     top: 120px;
     left: 16rem;
     padding: 0 70px;
-    margin-bottom: 7rem;
+    margin-bottom: 10rem;
     height: 80% !important;
 }
 .textContent {
@@ -454,8 +455,7 @@ i {
 
 .fa-check-double{
     position:relative;
-    bottom:10px;
-    left:70%;
+    bottom:0;
     opacity:0.5;
 }
 
@@ -487,12 +487,13 @@ i {
         }
 
     #messages {
-        position: relative;
+        position: absolute;
         padding: 10px;
         /*left: 260px;
         top:100px;*/
-        width: 76%;
-        height: 70% !important;
+        width: 75%;
+        height: 80% !important;
+        margin-bottom: 13rem;
     }
 }
 .new-msg-badge {
@@ -511,10 +512,66 @@ i {
     position: absolute;
     left: 130px;
 }
-@media (max-width: 1244px) {
-    .input {
+
+.textTime{
+    font-size:18px;
+    color:grey;
+}
+
+#forFlex {
+    width: 300px;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row-reverse;
+    align-items: center;
+    height: 20px;
+}
+.users #forUpperFlex {
+    display: flex;
+    flex-direction: row-reverse;
+    /*justify-content: space-around;*/
+}
+    @media (max-width: 1244px) {
+        .input {
         position: fixed;
         bottom: 0;
         left: 20%;
     }
+}
+
+.msg-options {
+    display: flex !important;
+    gap: 10px;
+    padding: 5px;
+    background-color: #f1f1f1;
+    border-radius: 5px;
+    position: absolute;
+    z-index: 100;
+    margin-right:20px;
+}
+
+.edit-btn, .delete-btn {
+    cursor: pointer;
+    background-color: #ddd;
+    border: none;
+    padding:5px 15px;
+    border-radius: 3px;
+    color:white;
+    transition:all 1s ease;
+}
+
+.edit-btn{
+    background-color: green;
+}
+.delete-btn {
+    background-color: red;
+}
+    .delete-btn:hover {
+        background-color:darkred;
+    }
+    .edit-btn:hover {
+        background-color: darkgreen;
+    }
+.fa-ellipsis-vertical:hover{
+    cursor:pointer;
 }

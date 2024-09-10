@@ -219,8 +219,9 @@ namespace SignalRTrial.Hubs
                         _messageCount[roomName] = 0;
                     }
                     _messageCount[roomName]++;
-
-                    await Clients.OthersInGroup(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message }, _messageCount[roomName], group.Id);
+                    //Console.WriteLine($"TIME IS: {msg.Timestamp.Value.ToString("HH:mm:ss")}");
+                    var formattedTime = msg.Timestamp.Value.ToString("HH:mm:ss");
+                    await Clients.OthersInGroup(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message, time = formattedTime }, _messageCount[roomName], group.Id, group.Name);
 
                     Console.WriteLine($"Room is: {group.Name} has message: {msg.Content}");
                     await NotifyGroupMembers(roomName, message);
@@ -275,6 +276,36 @@ namespace SignalRTrial.Hubs
             await _groupService.DeleteGroupAsync(gid);
 
         }
+
+        public async Task DeleteMessage(string groupName, string mid)
+        {
+            var msg = await _messageService.GetMessageByIdAsync(mid);
+            Console.WriteLine($"msg: {msg}");
+            var group = await _groupService.GetGroupByNameAsync(groupName);
+            Console.WriteLine($"groupName: {groupName}");
+
+
+            var membersIds = group.Members?.ToList() ?? new List<string>();
+            var users = await _userService.GetUsersInGroupsAsync(membersIds);
+            Console.WriteLine($"users: {users}");
+
+
+            foreach (var u in users)
+            {
+                var uinfo = _connections.Values.FirstOrDefault(info => info.UserId == u.Id);
+                if (uinfo != null && uinfo.ConnectionId != null)
+                {
+                    await Clients.Client(uinfo.ConnectionId).SendAsync("MessageDeleted", mid);
+                    Console.WriteLine($"inside loop");
+
+                    await Clients.All.SendAsync("MessageDeleted", mid);
+
+                }
+            }
+            await _messageService.DeleteMessageAsync(mid);
+
+        }
+
 
         private async Task NotifyGroupMembers(string groupName, string message)
         {

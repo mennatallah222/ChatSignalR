@@ -17,11 +17,11 @@ namespace SignalRTrial.Services
             return message;
         }
 
-        //public async Task<Message> GetMessageByIdAsync(string id)
-        //{
+        public async Task<Message> GetMessageByIdAsync(string id)
+        {
 
-        //    return await _messages.Find(m => m.Id == id).FirstOrDefaultAsync();
-        //}
+            return await _messages.Find(m => m.Id == id).FirstOrDefaultAsync();
+        }
 
         //public async Task UpdateMessageAsync(string id, Message updatedMessage)
         //{
