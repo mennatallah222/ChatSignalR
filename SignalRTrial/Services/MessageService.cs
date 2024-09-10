@@ -23,10 +23,10 @@ namespace SignalRTrial.Services
             return await _messages.Find(m => m.Id == id).FirstOrDefaultAsync();
         }
 
-        //public async Task UpdateMessageAsync(string id, Message updatedMessage)
-        //{
-        //    await _messages.ReplaceOneAsync(m => m.Id == id, updatedMessage);
-        //}
+        public async Task UpdateMessageAsync(string id, Message updatedMessage)
+        {
+            await _messages.ReplaceOneAsync(m => m.Id == id, updatedMessage);
+        }
 
         public async Task DeleteMessageAsync(string id)
         {

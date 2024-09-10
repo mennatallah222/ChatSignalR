@@ -53,7 +53,6 @@ namespace SignalRTrial.Hubs
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            // The user might have disconnected unexpectedly
             if (_connections.TryRemove(Context.ConnectionId, out var userInfo))
             {
                 var user = await _userService.GetUserByIdAsync(userInfo.UserId);
@@ -262,9 +261,6 @@ namespace SignalRTrial.Hubs
             var users = await _userService.GetUsersInGroupsAsync(membersIds);
             foreach (var u in users)
             {
-                //await _userService.ExitFromGroup(gid, u.Id);
-
-                //notifying them in real time
                 var uinfo = _connections.Values.FirstOrDefault(info => info.UserId == u.Id);
                 if (uinfo != null && uinfo.ConnectionId != null)
                 {
@@ -280,14 +276,11 @@ namespace SignalRTrial.Hubs
         public async Task DeleteMessage(string groupName, string mid)
         {
             var msg = await _messageService.GetMessageByIdAsync(mid);
-            Console.WriteLine($"msg: {msg}");
             var group = await _groupService.GetGroupByNameAsync(groupName);
-            Console.WriteLine($"groupName: {groupName}");
 
 
             var membersIds = group.Members?.ToList() ?? new List<string>();
             var users = await _userService.GetUsersInGroupsAsync(membersIds);
-            Console.WriteLine($"users: {users}");
 
 
             foreach (var u in users)
@@ -296,9 +289,8 @@ namespace SignalRTrial.Hubs
                 if (uinfo != null && uinfo.ConnectionId != null)
                 {
                     await Clients.Client(uinfo.ConnectionId).SendAsync("MessageDeleted", mid);
-                    Console.WriteLine($"inside loop");
 
-                    await Clients.All.SendAsync("MessageDeleted", mid);
+                    await Clients.Group(groupName).SendAsync("MessageDeleted", mid);
 
                 }
             }
@@ -306,6 +298,36 @@ namespace SignalRTrial.Hubs
 
         }
 
+        public async Task SaveEditedMessage(string groupName, string mid, string msgContent)
+        {
+            var msg = await _messageService.GetMessageByIdAsync(mid);
+            if (msg == null)
+            {
+                return;
+            }
+            msg.Content = msgContent;
+
+            var group = await _groupService.GetGroupByNameAsync(groupName);
+
+
+            var membersIds = group.Members?.ToList() ?? new List<string>();
+            var users = await _userService.GetUsersInGroupsAsync(membersIds);
+
+
+            foreach (var u in users)
+            {
+                var uinfo = _connections.Values.FirstOrDefault(info => info.UserId == u.Id);
+                if (uinfo != null && uinfo.ConnectionId != null)
+                {
+                    await Clients.Client(uinfo.ConnectionId).SendAsync("MessageDeleted", mid);
+
+                    await Clients.Group(groupName).SendAsync("MessageDeleted", mid);
+
+                }
+            }
+            await _messageService.UpdateMessageAsync(mid, msg);
+
+        }
 
         private async Task NotifyGroupMembers(string groupName, string message)
         {
@@ -317,8 +339,6 @@ namespace SignalRTrial.Hubs
             var users = await _userService.GetUsersInGroupsAsync(membersIds);
             foreach (var u in users)
             {
-                //await _userService.ExitFromGroup(gid, u.Id);
-
                 //notifying them in real time
                 var uinfo = _connections.Values.FirstOrDefault(info => info.UserId == u.Id);
                 if (uinfo != null && uinfo.ConnectionId != null)
@@ -327,7 +347,6 @@ namespace SignalRTrial.Hubs
 
                 }
             }
-            //await Clients.OthersInGroup(groupName).SendAsync("ReceiveNotification", notificationMessage);
         }
 
 

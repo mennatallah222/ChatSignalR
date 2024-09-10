@@ -85,7 +85,7 @@ function getEmail() {
     return sessionStorage.getItem('email');
 }
 
-//to check if we are on the chat page
+
 if (window.location.pathname === '/chat.html') {
     userName = getUser();
     email = getEmail();
@@ -428,11 +428,11 @@ if (connection) {
                     addMember.id = "addMemberBtn";
                     addMember.innerText = "Add Member";
                     addMember.setAttribute('data-toggle', 'modal');
-                    //setting data-target attribute
+
                     addMember.setAttribute('data-target', '#addMember');
                     divOfBtns.appendChild(addMember);
 
-                    //create group button
+
                     groupMembersBtn.addEventListener("click", () => {
                         console.log(`selected grp: ${selectedGroup}`);
 
@@ -535,7 +535,7 @@ if (connection) {
                     <span class="userSpan">${msg.userName}</span>
                 </div>
 
-                <p class="textContent"><br>${msg.content}</p>
+                <p class="textContent" id="msg-content-${index}"><br>${msg.content}</p>
 
                 <div id="forFlex">
                     ${msgType === "users" ?
@@ -571,23 +571,18 @@ if (connection) {
             button.addEventListener('click', function () {
                 const msgId = this.getAttribute('data-id');
                 console.log(`Edit message with ID: ${msgId}`);
+                const index = this.getAttribute('data-index');
+                performEdit(index, msgId);
             });
         });
 
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', function () {
                 const msgId = this.getAttribute('data-id');
-                //console.log(`Delete message with ID: ${msgId}`);
-
                 const index = this.getAttribute('data-index');
-                //console.log(`Index of message : ${index}`);
                 const roomName = document.getElementById("roomTitle");
-                //console.log(`roommmmmmmmmmmmm in deletemessage: ${roomName.textContent.replace("Room: ", "").trim()}`);
-
                 deleteMessage(roomName.textContent.replace("Room: ", "").trim(), msgId);
-
                 const msgObj = document.getElementById(`message-${index}`);
-                //console.log(msgObj);
                 msgObj.remove();
 
             });
@@ -605,6 +600,32 @@ if (connection) {
         }
     }
 
+    function performEdit(index, msgId) {
+        const msgContent = document.getElementById(`msg-content-${index}`);
+        console.log(msgContent);
+        const oldText = msgContent.textContent.trim();
+
+        msgContent.innerHTML = `
+            <br/>
+            <textarea id="edit-input-${index}" class="edit-input">${oldText}</textarea>
+            <button id="save-btn-${index}" class="save-btn">Save</button>
+            <button id="cancel-btn-${index}" class="cancel-btn">Cancel</button>
+    
+        `;
+
+        //saving the msg
+        document.getElementById(`save-btn-${index}`).addEventListener('click', function () {
+            const newText = document.getElementById(`edit-input-${index}`).value.trim();
+            if (newText) {
+                msgContent.innerHTML = `<br>${newText}`;
+                console.log(`Message with ID: ${msgId} updated to: ${newText}`);
+                saveEditedMessage(msgId, newText);
+            }
+        });
+        document.getElementById(`cancel-btn-${index}`).addEventListener('click', function () {
+            msgContent.innerHTML = `<br>${originalText}`;
+        });
+    }
     function toggleAction(div) {
         if (div.style.display === "" || div.style.display === "none") {
             div.style.display = "block";
@@ -623,11 +644,10 @@ if (connection) {
         connection.invoke("DeleteMessage", roomId, msgId).catch(err => console.log(err.toString()));
     }
 
-
-
-
-
-
+    function saveEditedMessage(msgId, messageContent) {
+        const groupName = getCurrentRoomName();
+        connection.invoke("SaveEditedMessage", groupName, msgId, messageContent).catch(err => console.log(err.toString()));
+    }
 
     $('#exampleModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);
