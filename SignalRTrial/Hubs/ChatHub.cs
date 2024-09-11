@@ -210,7 +210,6 @@ namespace SignalRTrial.Hubs
                     group.Messages.Add(msg.Content);
 
                     await _messageService.CreateMessageAsync(msg);
-                    //await Clients.Group(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message });
                     await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
 
                     if (!_messageCount.ContainsKey(roomName))
@@ -218,7 +217,6 @@ namespace SignalRTrial.Hubs
                         _messageCount[roomName] = 0;
                     }
                     _messageCount[roomName]++;
-                    //Console.WriteLine($"TIME IS: {msg.Timestamp.Value.ToString("HH:mm:ss")}");
                     var formattedTime = msg.Timestamp.Value.ToString("HH:mm:ss");
                     await Clients.OthersInGroup(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message, time = formattedTime }, _messageCount[roomName], group.Id, group.Name);
 
@@ -273,24 +271,22 @@ namespace SignalRTrial.Hubs
 
         }
 
-        public async Task DeleteMessage(string groupName, string mid)
+        public async Task DeleteMessage(string groupName, string mid, string index)
         {
             var msg = await _messageService.GetMessageByIdAsync(mid);
             var group = await _groupService.GetGroupByNameAsync(groupName);
-
-
             var membersIds = group.Members?.ToList() ?? new List<string>();
             var users = await _userService.GetUsersInGroupsAsync(membersIds);
-
-
             foreach (var u in users)
             {
                 var uinfo = _connections.Values.FirstOrDefault(info => info.UserId == u.Id);
                 if (uinfo != null && uinfo.ConnectionId != null)
                 {
-                    await Clients.Client(uinfo.ConnectionId).SendAsync("MessageDeleted", mid);
+                    Console.WriteLine(index);
+                    //await Clients.Client(uinfo.ConnectionId).SendAsync("MessageDeleted", index);
 
-                    await Clients.Group(groupName).SendAsync("MessageDeleted", mid);
+                    await Clients.Group(group.Name).SendAsync("MessageDeleted", index);
+                    //await Clients.All.SendAsync("MessageDeleted", index);
 
                 }
             }
@@ -319,9 +315,9 @@ namespace SignalRTrial.Hubs
                 var uinfo = _connections.Values.FirstOrDefault(info => info.UserId == u.Id);
                 if (uinfo != null && uinfo.ConnectionId != null)
                 {
-                    await Clients.Client(uinfo.ConnectionId).SendAsync("MessageDeleted", mid);
+                    await Clients.Client(uinfo.ConnectionId).SendAsync("MessageEdited", mid, msgContent);
 
-                    await Clients.Group(groupName).SendAsync("MessageDeleted", mid);
+                    await Clients.OthersInGroup(group.Name).SendAsync("MessageEdited", mid, msgContent);
 
                 }
             }

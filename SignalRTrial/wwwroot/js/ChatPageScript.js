@@ -526,7 +526,7 @@ if (connection) {
             const time = getRelativeTime(msg.timestamp);
             const msgType = msg.userName === getUser() ? "users" : "others";
             messagesDiv.innerHTML += `
-            <div class="groupMessage ${msgType}" id="message-${index}">
+            <div class="groupMessage ${msgType} message-${index}" id="message-${msg.id}">
                 <div id="forUpperFlex">
                     ${msgType === "users" ?
                     ` <i class="msg-actions fa-solid fa-ellipsis-vertical" data-index="${index}" style:"cursor:pointer;"></i>`
@@ -579,10 +579,15 @@ if (connection) {
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', function () {
                 const msgId = this.getAttribute('data-id');
+                console.log("THE DELETE MESSAGE GROUP NAME IS: ", msgId);
+
                 const index = this.getAttribute('data-index');
+                console.log("THE DELETE MESSAGE GROUP NAME IS: ", index);
+
                 const roomName = document.getElementById("roomTitle");
-                deleteMessage(roomName.textContent.replace("Room: ", "").trim(), msgId);
-                const msgObj = document.getElementById(`message-${index}`);
+                deleteMessage(roomName.textContent.replace("Room: ", "").trim(), msgId, index);
+                console.log("THE DELETE MESSAGE GROUP NAME IS: ", roomName.textContent.replace("Room: ", "").trim());
+                const msgObj = document.getElementById(`message-${msgId}`);
                 msgObj.remove();
 
             });
@@ -640,8 +645,8 @@ if (connection) {
         connection.invoke("DeleteGroup", roomId).catch(err => console.log(err.toString()));
     }
 
-    function deleteMessage(roomId, msgId) {
-        connection.invoke("DeleteMessage", roomId, msgId).catch(err => console.log(err.toString()));
+    function deleteMessage(roomName, msgId, index) {
+        connection.invoke("DeleteMessage", roomName, msgId, index).catch(err => console.log(err.toString()));
     }
 
     function saveEditedMessage(msgId, messageContent) {
@@ -675,12 +680,36 @@ if (connection) {
         });
     });
 
-    connection.on("MessageDeleted", function (mid) {
-        console.log("MessageDeleted: ", mid);
-        const msgDiv = document.getElementById("groups-list");
-        const msgToDelete = Array.from(msgDiv.children).find(item => item.querySelector('i').id === mid);
-        if (msgToDelete) msgToDelete.remove();
+
+    //delete the message from the chat and appear immediately
+    connection.on("MessageDeleted", function (index) {
+        let msgDiv = document.querySelector(`.groupMessage.users.message-${index}`);
+        if (!msgDiv) {
+            msgDiv = document.querySelector(`.groupMessage.others.message-${index}`);
+        }
+        else {
+            //when sending the message in real time and we want to delete it, it's class name won't be edited unless the other users refreshed the chat page
+            msgDiv = document.querySelector(`.groupMessage.message-${index}`);
+        }
+        if (!msgDiv) {
+            return;
+        }
+        msgDiv.remove();
     });
+
+
+
+    connection.on("MessageEdited", function (mid, newContent) {
+        console.log("MessageEdited: ", mid);
+        const msgDiv = document.getElementById("groups-list");
+        const msgToEdit = Array.from(msgDiv.children).find(item => item.querySelector('i').id === mid);
+        if (msgToEdit) {
+            if (msgToEdit.querySelector('.message-content')) {
+                msgToEdit.textContent = newContent;
+            }
+        }
+    });
+
 
     //add member to group
     $('#addMember').on('show.bs.modal', function (event) {
