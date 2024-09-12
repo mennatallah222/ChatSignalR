@@ -398,7 +398,13 @@ namespace SignalRTrial.Hubs
         }
 
 
+        public async Task MarkMessageAsSeen(string messageId, string userId)
+        {
+            await _messageService.MarkMessageAsSeenAsync(messageId, userId);
 
+            // Broadcast the event to all clients in the group
+            await Clients.Group(userId).SendAsync("MessageSeen", messageId, userId);
+        }
     }
 
 }

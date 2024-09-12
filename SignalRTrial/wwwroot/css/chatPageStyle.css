@@ -575,3 +575,8 @@ i {
 .fa-ellipsis-vertical:hover{
     cursor:pointer;
 }
+
+
+.blue-seen-icon {
+    color: blue !important;
+}

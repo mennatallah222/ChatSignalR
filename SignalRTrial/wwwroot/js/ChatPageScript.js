@@ -249,10 +249,14 @@ if (connection) {
         const groupElement = document.querySelector(`#groups-list li[data-group="${gid}"]`);
         if (groupElement) {
             let badge = groupElement.querySelector('.new-msg-badge');
-            if (badge) {
-                let currentCount = parseInt(badge.innerText, 10);
-                badge.innerText = `${currentCount + 1}`;
-            } else {
+
+            const url = new URL(window.location.href);
+            const params = new URLSearchParams(url.search);
+            const chatName = params.get('chat');
+
+            if (!badge && chatName !== gname) {
+                //let currentCount = parseInt(badge.innerText, 10);
+                //badge.innerText = `${currentCount + 1}`;
                 badge = document.createElement('span');
                 badge.className = 'new-msg-badge';
                 badge.innerText = `new`;
@@ -490,7 +494,7 @@ if (connection) {
 
 
     function loadMessages(roomName) {
-        console.log("loading messages from: ", roomName)
+        console.log("loading messages from: ", roomName);
         connection.invoke("LoadMessages", roomName).catch(err => console.log(err.toString()));
     }
 
@@ -525,6 +529,9 @@ if (connection) {
         messages.forEach((msg, index) => {
             const time = getRelativeTime(msg.timestamp);
             const msgType = msg.userName === getUser() ? "users" : "others";
+
+            const seenClass = msg.seenBy.includes(getUser()) ? 'blue-seen-icon' : '';  // Check if current user has seen the message
+
             messagesDiv.innerHTML += `
             <div class="groupMessage ${msgType} message-${index}" id="message-${msg.id}">
                 <div id="forUpperFlex">
@@ -539,7 +546,7 @@ if (connection) {
 
                 <div id="forFlex">
                     ${msgType === "users" ?
-                    `<i class="fas fa-check-double" style="font-size:24px;"></i> `
+                    `<i class="fas fa-check-double ${seenClass}" style="font-size:24px;"></i> `
                     : ""
                 }
                      <p class="textTime"><br> ${time || ""}</p>
@@ -556,6 +563,12 @@ if (connection) {
                 }
             </div>
         `;
+
+            if (!msg.seenBy.includes(getUser())) {
+                console.log("SEEN2: ", msg.seenBy);
+
+                markMessageAsSeen(msg.id);
+            }
         });
 
         //to toggle visibility of options
@@ -678,6 +691,22 @@ if (connection) {
                 alert("Please enter a group name or check that you're signed in");
             }
         });
+    });
+
+
+    function markMessageAsSeen(messageId) {
+        const userId = getUser();
+        connection.invoke("MarkMessageAsSeen", messageId, userId)
+            .catch(function (err) {
+                return console.error(err.toString());
+            });
+    }
+    connection.on("MessageSeen", function (messageId, userId) {
+        var messageElement = document.getElementById(`message-${messageId}`);
+        console.log(`SEENN: ${messageElement}`);
+        if (messageElement) {
+            messageElement.classList.add("blue-seen-icon");
+        }
     });
 
 

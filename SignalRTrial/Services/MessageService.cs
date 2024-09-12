@@ -45,5 +45,16 @@ namespace SignalRTrial.Services
         //    (m.SenderId == uid2 || m.RecieverId == uid1)
         //    ).ToListAsync();
         //}
+
+        public async Task MarkMessageAsSeenAsync(string messageId, string userId)
+        {
+            var filter = Builders<Message>.Filter.And(
+                Builders<Message>.Filter.Eq(m => m.Id, messageId)
+            );
+
+            var update = Builders<Message>.Update.AddToSet(m => m.SeenBy, userId); // Adds the userId to SeenBy array
+            await _messages.UpdateOneAsync(filter, update);
+        }
+
     }
 }
