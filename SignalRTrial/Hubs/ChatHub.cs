@@ -392,7 +392,6 @@ namespace SignalRTrial.Hubs
             }
             else
             {
-                // Handle case where userInfo.ConnectionId is null
                 await Clients.Caller.SendAsync("Error", "Unable to notify user.");
             }
         }
@@ -401,10 +400,17 @@ namespace SignalRTrial.Hubs
         public async Task MarkMessageAsSeen(string messageId, string userId)
         {
             await _messageService.MarkMessageAsSeenAsync(messageId, userId);
-
-            // Broadcast the event to all clients in the group
-            await Clients.Group(userId).SendAsync("MessageSeen", messageId, userId);
+            var message = await _messageService.GetMessageByIdAsync(messageId);
+            if (message != null)
+            {
+                var group = await _groupService.GetGroupByIdAsync(message.GroupId);
+                if (group != null)
+                {
+                    await Clients.Group(group.Name).SendAsync("MessageSeen", messageId, userId);
+                }
+            }
         }
+
     }
 
 }

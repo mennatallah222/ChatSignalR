@@ -529,45 +529,33 @@ if (connection) {
         messages.forEach((msg, index) => {
             const time = getRelativeTime(msg.timestamp);
             const msgType = msg.userName === getUser() ? "users" : "others";
-
-            const seenClass = msg.seenBy.includes(getUser()) ? 'blue-seen-icon' : '';  // Check if current user has seen the message
+            const seenClass = msg.seenBy.includes(getUser()) ? 'blue-seen-icon' : '';
 
             messagesDiv.innerHTML += `
-            <div class="groupMessage ${msgType} message-${index}" id="message-${msg.id}">
+            <div class="groupMessage ${msgType} message-${index}" data-sender="${msg.userName}" id="message-${msg.id}">
                 <div id="forUpperFlex">
-                    ${msgType === "users" ?
-                    ` <i class="msg-actions fa-solid fa-ellipsis-vertical" data-index="${index}" style:"cursor:pointer;"></i>`
-                    : ''
-                }
+                    ${msgType === "users" ? `<i class="msg-actions fa-solid fa-ellipsis-vertical" data-index="${index}" style="cursor:pointer;"></i>` : ''}
                     <span class="userSpan">${msg.userName}</span>
                 </div>
 
                 <p class="textContent" id="msg-content-${index}"><br>${msg.content}</p>
 
                 <div id="forFlex">
-                    ${msgType === "users" ?
-                    `<i class="fas fa-check-double ${seenClass}" style="font-size:24px;"></i> `
-                    : ""
-                }
-                     <p class="textTime"><br> ${time || ""}</p>
+                    ${msgType === "users" ? `<i class="fas fa-check-double ${seenClass}" style="font-size:24px;"></i>` : ""}
+                    <p class="textTime"><br> ${time || ""}</p>
                 </div>
 
-                ${msgType === "users" ?
-                    `
-                        <div class="msg-options" id="msg-options-${index}" style="display:none;">
-                            <button class="edit-btn" data-id="${msg.id}" data-index="${index}">Edit</button>
-                            <button class="delete-btn" data-id="${msg.id}" data-index="${index}">Delete</button>
-                        </div>
-                    `
-                    : ""
-                }
+                ${msgType === "users" ? `
+                    <div class="msg-options" id="msg-options-${index}" style="display:none;">
+                        <button class="edit-btn" data-id="${msg.id}" data-index="${index}">Edit</button>
+                        <button class="delete-btn" data-id="${msg.id}" data-index="${index}">Delete</button>
+                    </div>` : ""}
             </div>
         `;
 
-            if (!msg.seenBy.includes(getUser())) {
-                console.log("SEEN2: ", msg.seenBy);
-
-                markMessageAsSeen(msg.id);
+            // Mark the message as seen if it hasn't been seen yet and the user is not the sender
+            if (!msg.seenBy.includes(getUser()) && getUser() !== msg.userName) {
+                markMessageAsSeen(msg.id, getUser());
             }
         });
 
@@ -694,20 +682,25 @@ if (connection) {
     });
 
 
-    function markMessageAsSeen(messageId) {
-        const userId = getUser();
-        connection.invoke("MarkMessageAsSeen", messageId, userId)
+    function markMessageAsSeen(messageId, userSeenMessage) {
+        console.log("Marking message as seen:", messageId, " by user:", userSeenMessage);
+
+        connection.invoke("MarkMessageAsSeen", messageId, userSeenMessage)
             .catch(function (err) {
-                return console.error(err.toString());
+                console.error("Error marking message as seen:", err.toString());
             });
     }
+
     connection.on("MessageSeen", function (messageId, userId) {
         var messageElement = document.getElementById(`message-${messageId}`);
-        console.log(`SEENN: ${messageElement}`);
-        if (messageElement) {
-            messageElement.classList.add("blue-seen-icon");
+        if (messageElement && userId !== getUser()) {
+            var icon = messageElement.querySelector(".fa-check-double");
+            if (icon) {
+                icon.classList.add("blue-seen-icon");
+            }
         }
     });
+
 
 
     //delete the message from the chat and appear immediately

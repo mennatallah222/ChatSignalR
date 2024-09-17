@@ -14,7 +14,6 @@ namespace SignalRTrial.Entities
         public string? Content { get; set; }
         public DateTime? Timestamp { get; set; }
         public List<string> SeenBy { get; set; } = new List<string>();
-
         public Message()
         {
 

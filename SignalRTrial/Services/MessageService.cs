@@ -6,9 +6,11 @@ namespace SignalRTrial.Services
     public class MessageService
     {
         private readonly IMongoCollection<Message> _messages;
+        private readonly IMongoCollection<UserGroupMessages> _userGroupMessages;
         public MessageService(IMongoDatabase database)
         {
             _messages = database.GetCollection<Message>("Messages");
+            _userGroupMessages = database.GetCollection<UserGroupMessages>("UserGroupMessages");
         }
 
         public async Task<Message> CreateMessageAsync(Message message)
@@ -35,7 +37,6 @@ namespace SignalRTrial.Services
 
         public async Task<List<Message>> GetMessagesForChatAsync(string groupId)
         {
-            // Filter messages by the GroupId to fetch all messages in the group
             return await _messages.Find(m => m.GroupId == groupId).ToListAsync();
         }
         //public async Task<List<Message>> GetMessagesForChatAsync(string uid1, string uid2)
@@ -48,13 +49,12 @@ namespace SignalRTrial.Services
 
         public async Task MarkMessageAsSeenAsync(string messageId, string userId)
         {
-            var filter = Builders<Message>.Filter.And(
-                Builders<Message>.Filter.Eq(m => m.Id, messageId)
-            );
-
-            var update = Builders<Message>.Update.AddToSet(m => m.SeenBy, userId); // Adds the userId to SeenBy array
+            var filter = Builders<Message>.Filter.Eq(m => m.Id, messageId);
+            var update = Builders<Message>.Update.AddToSet(m => m.SeenBy, userId);
             await _messages.UpdateOneAsync(filter, update);
         }
+
+
 
     }
 }

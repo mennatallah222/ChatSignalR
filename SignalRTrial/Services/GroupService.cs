@@ -6,9 +6,16 @@ namespace SignalRTrial.Services
     public class GroupService
     {
         private readonly IMongoCollection<GroupChat> _groups;
+        private readonly IMongoCollection<Message> _messages;
+
+        private readonly IMongoCollection<User> _users;
+        private readonly IMongoCollection<UserGroupMessages> _userGroupMessages;
         public GroupService(IMongoDatabase database)
         {
             _groups = database.GetCollection<GroupChat>("Groups");
+            _users = database.GetCollection<User>("User");
+            _messages = database.GetCollection<Message>("Messages");
+            _userGroupMessages = database.GetCollection<UserGroupMessages>("UserGroupMessages");
         }
 
         public async Task<GroupChat> CreateGroupAsync(GroupChat group)
@@ -74,5 +81,37 @@ namespace SignalRTrial.Services
                 .Set(G => G.Members, groupChat.Members);
             await _groups.UpdateOneAsync(filter, update);
         }
+
+        public async Task<List<User>> GetGroupUsersAsync(string gid)
+        {
+            var userGroupList = await _users.Find(ug => ug.GroupsIds.FirstOrDefault() == gid).ToListAsync();
+            var uids = userGroupList.Select(ug => ug.Id).ToList();
+            return await _users.Find(u => uids.Contains(u.Id)).ToListAsync();
+        }
+
+        public async Task<UserGroupMessages> GetUserGroupMessagesAsync(string userId, string groupId)
+        {
+            return await _userGroupMessages.Find(ug => ug.UserId == userId && ug.GroupId == groupId).FirstOrDefaultAsync();
+        }
+
+        public async Task CreateUserGroupMessagesAsync(UserGroupMessages userGroupMessages)
+        {
+            await _userGroupMessages.InsertOneAsync(userGroupMessages);
+        }
+
+        public async Task UpdateUserGroupMessagesAsync(UserGroupMessages userGroupMessages)
+        {
+            var filter = Builders<UserGroupMessages>.Filter.And(
+                Builders<UserGroupMessages>.Filter.Eq(ug => ug.UserId, userGroupMessages.UserId),
+                Builders<UserGroupMessages>.Filter.Eq(ug => ug.GroupId, userGroupMessages.GroupId)
+            );
+            await _userGroupMessages.ReplaceOneAsync(filter, userGroupMessages);
+        }
+
+        public async Task<List<Message>> GetMessagesByIdsAsync(IEnumerable<string> messageIds)
+        {
+            return await _messages.Find(m => messageIds.Contains(m.Id)).ToListAsync();
+        }
+
     }
 }
