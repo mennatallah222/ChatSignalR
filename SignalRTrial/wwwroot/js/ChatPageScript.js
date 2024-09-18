@@ -358,6 +358,11 @@ if (connection) {
 
                     document.body.appendChild(actions);
 
+                    const iconRect = e.target.getBoundingClientRect();
+                    actions.style.position = "absolute";
+                    actions.style.top = `${iconRect.bottom + window.scrollY}px`;
+                    actions.style.left = `${iconRect.left + window.scrollX}px`;
+
                     actions.addEventListener("click", function () {
                         deleteGroup(gids[index]);
                         actions.remove();
@@ -529,6 +534,8 @@ if (connection) {
             const time = getRelativeTime(msg.timestamp);
             const msgType = msg.userName === getUser() ? "users" : "others";
             const seenClass = isReadByAll ? 'blue-seen-icon' : '';
+            console.log("SEEN2: ", isReadByAll);
+
 
             messagesDiv.innerHTML += `
             <div class="groupMessage ${msgType} message-${index}" data-sender="${msg.userName}" id="message-${msg.id}">
@@ -551,7 +558,11 @@ if (connection) {
                     </div>` : ""}
             </div>
         `;
+
+            console.log("SEEN1: ", msg.seenBy);
+
             if (!msg.seenBy.includes(getUser()) && getUser() !== msg.userName) {
+                console.log("SEEN2: ", msg.seenBy);
                 markMessageAsSeen(msg.id, getUser());
             }
         });
@@ -681,8 +692,8 @@ if (connection) {
 
     function markMessageAsSeen(messageId, userSeenMessage) {
         console.log("Marking message as seen:", messageId, " by user:", userSeenMessage);
-
-        connection.invoke("MarkMessageAsSeen", messageId, userSeenMessage)
+        let groupName = getCurrentRoomName();
+        connection.invoke("MarkMessageAsSeen", groupName, messageId, userSeenMessage)
             .catch(function (err) {
                 console.error("Error marking message as seen:", err.toString());
             });

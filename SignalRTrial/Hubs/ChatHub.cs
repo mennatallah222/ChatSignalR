@@ -196,7 +196,8 @@ namespace SignalRTrial.Hubs
                         RecieverId = group.Id,
                         GroupId = group.Id,
                         Content = message,
-                        Timestamp = DateTime.Now
+                        Timestamp = DateTime.Now,
+                        SeenBy = new List<string>()
                     };
 
                     if (group.Messages == null)
@@ -216,7 +217,7 @@ namespace SignalRTrial.Hubs
                     _messageCount[roomName]++;
                     var formattedTime = msg.Timestamp.Value.ToString("HH:mm:ss");
 
-                    var groupMembersNum = group.Members?.Count() ?? 0;
+                    var groupMembersNum = group.Members?.Count();
                     Console.WriteLine($"groupMembersNum: {groupMembersNum}");
                     var seenCount = msg.SeenBy?.Count();
                     Console.WriteLine($"seenCount: {seenCount}");
@@ -224,6 +225,17 @@ namespace SignalRTrial.Hubs
                     var isReadByAll = seenCount == groupMembersNum - 1;
 
                     await Clients.Group(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message, time = formattedTime }, _messageCount[roomName], group.Id, group.Name, isReadByAll);
+
+                    var membersIds = group.Members?.ToList() ?? new List<string>();
+                    var users = await _userService.GetUsersInGroupsAsync(membersIds);
+                    foreach (var u in users)
+                    {
+                        var uinfo = _connections.Values.FirstOrDefault(info => info.UserId == u.Id);
+                        if (uinfo != null && uinfo.ConnectionId != null)
+                        {
+                            await MarkMessageAsSeen(roomName, msg.Id, msg.SenderId);
+                        }
+                    }
                     await NotifyGroupMembers(roomName, message);
                 }
                 else
@@ -245,14 +257,17 @@ namespace SignalRTrial.Hubs
                 {
                     var groupMembers = group.Members?.ToList() ?? new List<string>();
                     var messages = await _messageService.GetMessagesForChatAsync(group.Id);
+                    bool isReadByAll = default;
                     foreach (var message in messages)
                     {
-                        var seenCount = message.SeenBy?.Count ?? 0;
+                        var seenCount = message.SeenBy?.Count;
                         var groupMembersNum = groupMembers.Count;
-                        bool isReadByAll = seenCount == groupMembersNum - 1;
-                        await Clients.Caller.SendAsync("LoadGroupMessages", messages, isReadByAll);
+                        isReadByAll = seenCount == groupMembersNum - 1;
 
                     }
+                    Console.WriteLine($"isReadByAll: {isReadByAll}");
+                    await Clients.Caller.SendAsync("LoadGroupMessages", messages, isReadByAll);
+
                 }
             }
         }
@@ -403,16 +418,17 @@ namespace SignalRTrial.Hubs
         }
 
 
-        public async Task MarkMessageAsSeen(string messageId, string userId)
+        public async Task MarkMessageAsSeen(string groupName, string messageId, string userId)
         {
-            await _messageService.MarkMessageAsSeenAsync(messageId, userId);
             var message = await _messageService.GetMessageByIdAsync(messageId);
+
+            await _messageService.MarkMessageAsSeenAsync(messageId, userId);
             if (message != null)
             {
                 var group = await _groupService.GetGroupByIdAsync(message.GroupId);
                 if (group != null)
                 {
-                    await Clients.Group(group.Name).SendAsync("MessageSeen", messageId, userId);
+                    await Clients.Group(groupName).SendAsync("MessageSeen", messageId, userId);
                 }
             }
         }
