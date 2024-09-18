@@ -186,10 +186,7 @@ namespace SignalRTrial.Hubs
             if (_connections.TryGetValue(Context.ConnectionId, out var userInfo))
             {
                 var uid = userInfo.UserId;
-                Console.WriteLine($"current userInfo.UserId is: {uid}");
-
                 var group = await _groupService.GetGroupByNameAsync(roomName);
-
                 if (group != null)
                 {
                     var msg = new Message
@@ -218,9 +215,15 @@ namespace SignalRTrial.Hubs
                     }
                     _messageCount[roomName]++;
                     var formattedTime = msg.Timestamp.Value.ToString("HH:mm:ss");
-                    await Clients.OthersInGroup(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message, time = formattedTime }, _messageCount[roomName], group.Id, group.Name);
 
-                    Console.WriteLine($"Room is: {group.Name} has message: {msg.Content}");
+                    var groupMembersNum = group.Members?.Count() ?? 0;
+                    Console.WriteLine($"groupMembersNum: {groupMembersNum}");
+                    var seenCount = msg.SeenBy?.Count();
+                    Console.WriteLine($"seenCount: {seenCount}");
+
+                    var isReadByAll = seenCount == groupMembersNum - 1;
+
+                    await Clients.Group(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message, time = formattedTime }, _messageCount[roomName], group.Id, group.Name, isReadByAll);
                     await NotifyGroupMembers(roomName, message);
                 }
                 else
@@ -234,19 +237,22 @@ namespace SignalRTrial.Hubs
 
         public async Task LoadMessages(string roomName)
         {
-            Console.WriteLine("im in load messages");
             if (_connections.TryGetValue(Context.ConnectionId, out var userInfo))
             {
                 var uid = await _userService.GetUserIdByUserNameAsync(userInfo.UserName);
-                Console.WriteLine($"im in load messages and this is uid {uid}");
-
                 var group = await _groupService.GetGroupByNameAsync(roomName);
                 if (group != null)
                 {
+                    var groupMembers = group.Members?.ToList() ?? new List<string>();
                     var messages = await _messageService.GetMessagesForChatAsync(group.Id);
-                    Console.WriteLine($"im in load messages and this is group name {group.Name}");
+                    foreach (var message in messages)
+                    {
+                        var seenCount = message.SeenBy?.Count ?? 0;
+                        var groupMembersNum = groupMembers.Count;
+                        bool isReadByAll = seenCount == groupMembersNum - 1;
+                        await Clients.Caller.SendAsync("LoadGroupMessages", messages, isReadByAll);
 
-                    await Clients.Caller.SendAsync("LoadGroupMessages", messages);
+                    }
                 }
             }
         }

@@ -208,7 +208,7 @@ if (connection) {
 
     });
 
-    connection.on("ReceiveMessage", function (msg, i, gid, gname) {
+    connection.on("ReceiveMessage", function (msg, i, gid, gname, isReadByAll) {
         console.log("received index is: ", i);
         console.log("received message is: ", msg.content);
         const messages = document.getElementById("messages");
@@ -217,7 +217,8 @@ if (connection) {
         const time = getRelativeTime(msg.timestamp);
 
         const msgType = msg.sender === userName ? "users" : "others";
-
+        const seenClass = isReadByAll ? 'blue-seen-icon' : '';
+        console.log("SEENCLASS IN ReceiveMessage: ", seenClass);
         const url = new URL(window.location.href);
         const params = new URLSearchParams(url.search);
         const chatName = params.get('chat');
@@ -226,19 +227,17 @@ if (connection) {
         <div class="groupMessage ${msgType}">
             <span class="userSpan">${msg.sender}</span>
 
+            
+
+            <p class="textContent"><br> ${msg.content}</p>
             <div id="forFlex">
                 ${msgType === "users" ?
-                    `<i class="fas fa-check-double" style="font-size:24px;"></i> `
+                    `<i class="fas fa-check-double ${seenClass}" style="font-size:24px;"></i> `
                     : ""
                 }
              <p class="textTime"><br> ${time || ""}</p>
 
             </div>
-
-            
-
-            <p class="textContent"><br> ${msg.content}</p>
-
         </div>
     `;
         }
@@ -498,8 +497,8 @@ if (connection) {
         connection.invoke("LoadMessages", roomName).catch(err => console.log(err.toString()));
     }
 
-    connection.on("LoadGroupMessages", (msgs) => {
-        displayMessages(msgs);
+    connection.on("LoadGroupMessages", function (msgs, isReadByAll) {
+        displayMessages(msgs, isReadByAll);
     });
 
 
@@ -522,14 +521,14 @@ if (connection) {
     }
 
 
-    function displayMessages(messages) {
+    function displayMessages(messages, isReadByAll) {
         const messagesDiv = document.getElementById("messages");
         messagesDiv.innerHTML = '';
 
         messages.forEach((msg, index) => {
             const time = getRelativeTime(msg.timestamp);
             const msgType = msg.userName === getUser() ? "users" : "others";
-            const seenClass = msg.seenBy.includes(getUser()) ? 'blue-seen-icon' : '';
+            const seenClass = isReadByAll ? 'blue-seen-icon' : '';
 
             messagesDiv.innerHTML += `
             <div class="groupMessage ${msgType} message-${index}" data-sender="${msg.userName}" id="message-${msg.id}">
@@ -552,8 +551,6 @@ if (connection) {
                     </div>` : ""}
             </div>
         `;
-
-            // Mark the message as seen if it hasn't been seen yet and the user is not the sender
             if (!msg.seenBy.includes(getUser()) && getUser() !== msg.userName) {
                 markMessageAsSeen(msg.id, getUser());
             }

@@ -39,13 +39,7 @@ namespace SignalRTrial.Services
         {
             return await _messages.Find(m => m.GroupId == groupId).ToListAsync();
         }
-        //public async Task<List<Message>> GetMessagesForChatAsync(string uid1, string uid2)
-        //{
-        //    return await _messages.Find(m =>
-        //    (m.SenderId == uid1 || m.RecieverId == uid2) ||
-        //    (m.SenderId == uid2 || m.RecieverId == uid1)
-        //    ).ToListAsync();
-        //}
+
 
         public async Task MarkMessageAsSeenAsync(string messageId, string userId)
         {
