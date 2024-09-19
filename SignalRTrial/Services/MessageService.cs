@@ -49,6 +49,16 @@ namespace SignalRTrial.Services
         }
 
 
+        public async Task AddReactionToMessage(string messageId, string userId, string reactionType)
+        {
+            var filter = Builders<Message>.Filter.Eq(m => m.Id, messageId);
+            var update = Builders<Message>.Update.AddToSet(m => m.Reactions, new Reaction
+            {
+                UserId = userId,
+                ReactionType = reactionType,
+            });
 
+            await _messages.UpdateOneAsync(filter, update);
+        }
     }
 }

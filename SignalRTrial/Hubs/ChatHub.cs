@@ -56,27 +56,16 @@ namespace SignalRTrial.Hubs
             if (_connections.TryRemove(Context.ConnectionId, out var userInfo))
             {
                 var user = await _userService.GetUserByIdAsync(userInfo.UserId);
-
-                if (user != null)
-                {
-                    user.Status = "offline";
-                    await _userService.UpdateUserAsync(userInfo.UserId, user);
-
-                    foreach (var group in user.GroupsIds)
-                    {
-                        await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
-                        await Clients.Group(group).SendAsync("UserLeft", userInfo.UserName);
-                    }
-                }
+                user.Status = "offline";
+                await _userService.UpdateUserAsync(user.Id, user);
             }
+            await Clients.All.SendAsync("UserLeft", userInfo.UserName);
 
             await base.OnDisconnectedAsync(exception);
         }
-
-
         public override async Task OnConnectedAsync()
         {
-            await Clients.Caller.SendAsync("WelcomeMessage", "Welcome to the chat!");
+            await Clients.Caller.SendAsync("UserJoined", "Welcome to the chat!");
 
             await base.OnConnectedAsync();
         }
@@ -197,7 +186,8 @@ namespace SignalRTrial.Hubs
                         GroupId = group.Id,
                         Content = message,
                         Timestamp = DateTime.Now,
-                        SeenBy = new List<string>()
+                        SeenBy = new List<string>(),
+                        Reactions = new List<Reaction>(),
                     };
 
                     if (group.Messages == null)
@@ -224,7 +214,7 @@ namespace SignalRTrial.Hubs
 
                     var isReadByAll = seenCount == groupMembersNum - 1;
 
-                    await Clients.Group(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message, time = formattedTime }, _messageCount[roomName], group.Id, group.Name, isReadByAll);
+                    await Clients.Group(roomName).SendAsync("ReceiveMessage", new { sender = userInfo.UserName, content = message, time = formattedTime, reactions = msg.Reactions }, _messageCount[roomName], group.Id, group.Name, isReadByAll);
 
                     var membersIds = group.Members?.ToList() ?? new List<string>();
                     var users = await _userService.GetUsersInGroupsAsync(membersIds);
@@ -433,6 +423,27 @@ namespace SignalRTrial.Hubs
             }
         }
 
+
+
+        public async Task SendReaction(string messageId, string reaction, string userName)
+        {
+            Console.WriteLine($"{messageId}, string {reaction}, string {userName}");
+            var message = await _messageService.GetMessageByIdAsync(messageId);
+            var user = await _userService.GetUserByUserNameAsync(userName);
+            var group = await _groupService.GetGroupByIdAsync(message?.GroupId);
+            if (message != null)
+            {
+                message.Reactions.Add(new Reaction
+                {
+                    UserId = user.Id,
+                    ReactionType = reaction
+                });
+                await _messageService.UpdateMessageAsync(messageId, message);
+            }
+            await _messageService.AddReactionToMessage(messageId, user.Id, reaction);
+            await Clients.OthersInGroup(group.Name).SendAsync("ReceiveReaction", messageId, userName, reaction);
+        }
     }
+
 
 }

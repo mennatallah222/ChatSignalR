@@ -218,7 +218,16 @@ if (connection) {
 
         const msgType = msg.sender === userName ? "users" : "others";
         const seenClass = isReadByAll ? 'blue-seen-icon' : '';
+
+        console.log('msg.reactions:', msg.reactions);
+        console.log('reactionMap:', reactionMap);
+
+
+        const reactionsList = msg.reactions.map(reaction =>
+            `<span class="reaction-display">${reactionMap[reaction.reactionType] || reaction.reactionType}</span>`).join('');
+        console.log(`IN ReceiveMessage: ${reactionsList}`);
         console.log("SEENCLASS IN ReceiveMessage: ", seenClass);
+
         const url = new URL(window.location.href);
         const params = new URLSearchParams(url.search);
         const chatName = params.get('chat');
@@ -226,17 +235,30 @@ if (connection) {
             messages.innerHTML += `
         <div class="groupMessage ${msgType}">
             <span class="userSpan">${msg.sender}</span>
-
-            
-
             <p class="textContent"><br> ${msg.content}</p>
+
+             <div class="reactions-section">${reactionsList}</div>
+
+                <div class="reaction-section">
+                    <button class="reaction-btn" data-index="${msg.id}" style="cursor:pointer;">😊 React</button>
+                    <div class="reaction-list" id="reaction-list-${msg.id}" style="display:none;">
+                        <span class="reaction" data-reaction="👍" data-reactionName="thumbsUp">👍</span>
+                        <span class="reaction" data-reaction="❤️" data-reactionName="love">❤️</span>
+                        <span class="reaction" data-reaction="😂" data-reactionName="laugh">😂</span>
+                        <span class="reaction" data-reaction="😮" data-reactionName="wow">😮</span>
+                        <span class="reaction" data-reaction="😢" data-reactionName="sad">😢</span>
+                        <span class="reaction" data-reaction="😡" data-reactionName="angry">😡</span>
+                    </div>
+                </div>
+
+
             <div id="forFlex">
                 ${msgType === "users" ?
                     `<i class="fas fa-check-double ${seenClass}" style="font-size:24px;"></i> `
                     : ""
                 }
+                
              <p class="textTime"><br> ${time || ""}</p>
-
             </div>
         </div>
     `;
@@ -525,6 +547,14 @@ if (connection) {
         return 'just now';
     }
 
+    const reactionMap = {
+        'thumbsUp': '👍',
+        'love': '❤️',
+        'laugh': '😂',
+        'wow': '😮',
+        'sad': '😢',
+        'angry': '😡'
+    }
 
     function displayMessages(messages, isReadByAll) {
         const messagesDiv = document.getElementById("messages");
@@ -534,8 +564,9 @@ if (connection) {
             const time = getRelativeTime(msg.timestamp);
             const msgType = msg.userName === getUser() ? "users" : "others";
             const seenClass = isReadByAll ? 'blue-seen-icon' : '';
-            console.log("SEEN2: ", isReadByAll);
 
+            const reactionsList = msg.reactions.map(reaction =>
+                `<span class="reaction-display">${reactionMap[reaction.reactionType] || reaction.reactionType}</span>`).join('');
 
             messagesDiv.innerHTML += `
             <div class="groupMessage ${msgType} message-${index}" data-sender="${msg.userName}" id="message-${msg.id}">
@@ -546,63 +577,145 @@ if (connection) {
 
                 <p class="textContent" id="msg-content-${index}"><br>${msg.content}</p>
 
-                <div id="forFlex">
-                    ${msgType === "users" ? `<i class="fas fa-check-double ${seenClass}" style="font-size:24px;"></i>` : ""}
-                    <p class="textTime"><br> ${time || ""}</p>
-                </div>
+               
 
                 ${msgType === "users" ? `
                     <div class="msg-options" id="msg-options-${index}" style="display:none;">
                         <button class="edit-btn" data-id="${msg.id}" data-index="${index}">Edit</button>
                         <button class="delete-btn" data-id="${msg.id}" data-index="${index}">Delete</button>
-                    </div>` : ""}
+                    </div>` : ""
+                }
+                 <div class="reactions-section">${reactionsList}</div>
+
+                <div class="reaction-section">
+                    <button class="reaction-btn" data-index="${msg.id}" style="cursor:pointer;">😊 React</button>
+                    <div class="reaction-list" id="reaction-list-${msg.id}" style="display:none;">
+                        <span class="reaction" data-reaction="👍" data-reactionName="thumbsUp">👍</span>
+                        <span class="reaction" data-reaction="❤️" data-reactionName="love">❤️</span>
+                        <span class="reaction" data-reaction="😂" data-reactionName="laugh">😂</span>
+                        <span class="reaction" data-reaction="😮" data-reactionName="wow">😮</span>
+                        <span class="reaction" data-reaction="😢" data-reactionName="sad">😢</span>
+                        <span class="reaction" data-reaction="😡" data-reactionName="angry">😡</span>
+                    </div>
+                </div>
+
+
+                <div id="forFlex">
+                    ${msgType === "users" ? `<i class="fas fa-check-double ${seenClass}" style="font-size:24px;"></i>` : ""}
+                    <p class="textTime"><br> ${time || ""}</p>
+                </div>
+
             </div>
         `;
 
-            console.log("SEEN1: ", msg.seenBy);
+
+            //to toggle visibility of options
+            document.querySelectorAll('.msg-actions').forEach(icon => {
+                icon.addEventListener('click', function () {
+                    const index = this.getAttribute('data-index');
+                    toggleOptions(index);
+                });
+            });
+
+
+            //event listeners for edit buttons
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const msgId = this.getAttribute('data-id');
+                    console.log(`Edit message with ID: ${msgId}`);
+                    const index = this.getAttribute('data-index');
+                    performEdit(index, msgId);
+                });
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const msgId = this.getAttribute('data-id');
+                    console.log("THE DELETE MESSAGE GROUP NAME IS: ", msgId);
+
+                    const index = this.getAttribute('data-index');
+                    console.log("THE DELETE MESSAGE GROUP NAME IS: ", index);
+
+                    const roomName = document.getElementById("roomTitle");
+                    deleteMessage(roomName.textContent.replace("Room: ", "").trim(), msgId, index);
+                    console.log("THE DELETE MESSAGE GROUP NAME IS: ", roomName.textContent.replace("Room: ", "").trim());
+                    const msgObj = document.getElementById(`message-${msgId}`);
+                    msgObj.remove();
+
+                });
+            });
+
 
             if (!msg.seenBy.includes(getUser()) && getUser() !== msg.userName) {
-                console.log("SEEN2: ", msg.seenBy);
                 markMessageAsSeen(msg.id, getUser());
             }
+
         });
-
-        //to toggle visibility of options
-        document.querySelectorAll('.msg-actions').forEach(icon => {
-            icon.addEventListener('click', function () {
-                const index = this.getAttribute('data-index');
-                toggleOptions(index);
-            });
-        });
-
-        //event listeners for edit buttons
-        document.querySelectorAll('.edit-btn').forEach(button => {
-            button.addEventListener('click', function () {
-                const msgId = this.getAttribute('data-id');
-                console.log(`Edit message with ID: ${msgId}`);
-                const index = this.getAttribute('data-index');
-                performEdit(index, msgId);
-            });
-        });
-
-        document.querySelectorAll('.delete-btn').forEach(button => {
-            button.addEventListener('click', function () {
-                const msgId = this.getAttribute('data-id');
-                console.log("THE DELETE MESSAGE GROUP NAME IS: ", msgId);
-
-                const index = this.getAttribute('data-index');
-                console.log("THE DELETE MESSAGE GROUP NAME IS: ", index);
-
-                const roomName = document.getElementById("roomTitle");
-                deleteMessage(roomName.textContent.replace("Room: ", "").trim(), msgId, index);
-                console.log("THE DELETE MESSAGE GROUP NAME IS: ", roomName.textContent.replace("Room: ", "").trim());
-                const msgObj = document.getElementById(`message-${msgId}`);
-                msgObj.remove();
-
-            });
-        });
-
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    document.addEventListener("click", function (event) {
+        if (event.target.classList.contains("reaction-btn")) {
+            const index = event.target.getAttribute("data-index");
+            const reactionList = document.getElementById(`reaction-list-${index}`);
+
+            if (reactionList) {
+                reactionList.style.display = reactionList.style.display === "none" ? "block" : "none";
+            }
+        }
+
+        //for emoji selection
+        if (event.target.classList.contains("reaction")) {
+            const reaction = event.target.getAttribute("data-reaction");
+            const reactionName = event.target.getAttribute("data-reactionName");
+
+            const index = event.target.closest(".reaction-list").id.split("-")[2];
+            const messageId = `${index}`;
+
+            console.log(`User reacted with ${reaction} on message ${messageId}`);
+            event.target.closest(".reaction-list").style.display = "none";
+
+            addReactionToMessage(`message-${messageId}`, reaction);
+
+            console.log(`messageId: ${messageId}`);
+            console.log(`reaction: ${reaction}`);
+            console.log(`getUser(): ${getUser()}`);
+            connection.invoke("SendReaction", messageId, reactionName, getUser())
+                .catch(function (err) {
+                    console.error(err.toString());
+                });
+        }
+    });
+
+    connection.on("ReceiveReaction", function (messageId, userName, reaction) {
+        console.log(`im in: ReceiveReaction: ${messageId}`);
+
+        const messageDiv = document.getElementById(`message-${messageId}`);
+        console.log(`im in: ReceiveReaction: ${messageDiv}`);
+        if (messageDiv) {
+            const reactionsSection = messageDiv.querySelector(".reactions-section");
+            if (reactionsSection) {
+                reactionsSection.innerHTML += `<span class="reaction-display">${reactionMap[reaction] || reaction}</span>`;
+            }
+        }
+    });
+    function addReactionToMessage(messageId, reaction) {
+        const messageDiv = document.getElementById(messageId);
+
+        if (messageDiv) {
+            let reactionDiv = messageDiv.querySelector(".reactions-section");
+
+            if (!reactionDiv) {
+                reactionDiv = document.createElement("div");
+                reactionDiv.className = "current-reactions";
+                messageDiv.appendChild(reactionDiv);
+            }
+
+            reactionDiv.innerHTML += `<span class="reaction-display">${reaction}</span>`;
+        }
+        else {
+            console.error(`Message element with ID ${messageId} not found.`);
+        }
     }
 
     function toggleOptions(index) {
@@ -789,4 +902,5 @@ if (connection) {
 
 else {
     console.error('Connection is not defined, cannot register event handlers.');
+    stopConnection();
 }
