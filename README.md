@@ -1,6 +1,6 @@
 # Chat Application
 > This project is a real-time chat application built using .NET 8, SignalR for real-time communication, JavaScript as the client library, and MongoDB as the database.
-> The application allows users to create and join chat rooms, send messages, and receive real-time notifications.
+- The application allows users to create and join chat rooms, send messages, and receive real-time notifications.
 
 # Features
 - Real-time Communication Chat Rooms: Users can create and join multiple chat rooms.
