@@ -23,9 +23,6 @@ namespace SignalRTrial.Hubs
 
         }
 
-        //private static ConcurrentDictionary<string, string> _connections = new();
-        //private readonly ConcurrentDictionary<string, string> _connections = new ConcurrentDictionary<string, string>();
-
 
         private static ConcurrentDictionary<string, UserConnectionInfo> _connections = new();
 
@@ -59,7 +56,7 @@ namespace SignalRTrial.Hubs
                 user.Status = "offline";
                 await _userService.UpdateUserAsync(user.Id, user);
             }
-            await Clients.All.SendAsync("UserLeft", userInfo.UserName);
+            await Clients.All.SendAsync("UserLeft", userInfo?.UserName);
 
             await base.OnDisconnectedAsync(exception);
         }
@@ -144,7 +141,6 @@ namespace SignalRTrial.Hubs
 
             var targetConnectionId = userInfo.ConnectionId;
             await Clients.Caller.SendAsync("AddToGroupsDiv", userGroups.Select(g => g.Name).ToList(), userGroups.Select(g => g.Id).ToList());
-            Console.WriteLine($"connection id is:{targetConnectionId} and user is: {userInfo.UserName}");
             await Clients.Group(roomName).SendAsync("UserJoined", user.UserName);
         }
 
@@ -208,9 +204,7 @@ namespace SignalRTrial.Hubs
                     var formattedTime = msg.Timestamp.Value.ToString("HH:mm:ss");
 
                     var groupMembersNum = group.Members?.Count();
-                    Console.WriteLine($"groupMembersNum: {groupMembersNum}");
                     var seenCount = msg.SeenBy?.Count();
-                    Console.WriteLine($"seenCount: {seenCount}");
 
                     var isReadByAll = seenCount == groupMembersNum - 1;
 
@@ -255,7 +249,6 @@ namespace SignalRTrial.Hubs
                         isReadByAll = seenCount == groupMembersNum - 1;
 
                     }
-                    Console.WriteLine($"isReadByAll: {isReadByAll}");
                     await Clients.Caller.SendAsync("LoadGroupMessages", messages, isReadByAll);
 
                 }
@@ -293,12 +286,7 @@ namespace SignalRTrial.Hubs
                 var uinfo = _connections.Values.FirstOrDefault(info => info.UserId == u.Id);
                 if (uinfo != null && uinfo.ConnectionId != null)
                 {
-                    Console.WriteLine(index);
-                    //await Clients.Client(uinfo.ConnectionId).SendAsync("MessageDeleted", index);
-
                     await Clients.Group(group.Name).SendAsync("MessageDeleted", index);
-                    //await Clients.All.SendAsync("MessageDeleted", index);
-
                 }
             }
             await _messageService.DeleteMessageAsync(mid);
@@ -427,7 +415,6 @@ namespace SignalRTrial.Hubs
 
         public async Task SendReaction(string messageId, string reaction, string userName)
         {
-            Console.WriteLine($"{messageId}, string {reaction}, string {userName}");
             var message = await _messageService.GetMessageByIdAsync(messageId);
             var user = await _userService.GetUserByUserNameAsync(userName);
             var group = await _groupService.GetGroupByIdAsync(message?.GroupId);

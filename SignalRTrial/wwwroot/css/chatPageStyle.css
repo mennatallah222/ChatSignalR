@@ -42,7 +42,6 @@ body{
     font-size: 1.5rem;
     margin-bottom: 15px;
     border: none;
-    /*padding:20px;*/
 }
 .roomName p {
     padding: 0px 30px;
@@ -67,7 +66,6 @@ body{
 #chatScreen{
     display:flex;
     height:100%;
-    /*margin:0px;*/
 }
 
 * {
@@ -196,8 +194,8 @@ body {
     align-self: center;
     position: relative;
     margin-bottom: 30px;
-    overflow-wrap: break-word; /*long words break and wrap*/
-    word-wrap: break-word; /*for older browsers*/
+    overflow-wrap: break-word;
+    word-wrap: break-word;
     white-space: normal;
     border: none;
     width:70%;
@@ -275,7 +273,6 @@ i {
     width: 25%;
     height: 90.5vh;
     padding: 10px;
-    /*border-radius: 10px;*/
     border: none;
     background-color: #f0f0f0;
     box-shadow: #aaaaaa 1px 0px 0px 0px;
@@ -310,9 +307,7 @@ i {
             right: 20px;
         }
 
-       /* .groups-div li:active {
-            background-color: #808080;
-        }*/
+       
     .groups-div li i:hover{
         background-color:tan;
         border-radius:50%;
@@ -446,7 +441,6 @@ i {
     flex-direction: column;
     border: none;
     background-color: antiquewhite;
-    /*border:2px solid black;*/
     border-radius: 20px;
     padding: 20px;
     width:40rem;
@@ -489,8 +483,7 @@ i {
     #messages {
         position: absolute;
         padding: 10px;
-        /*left: 260px;
-        top:100px;*/
+       
         width: 75%;
         height: 80% !important;
         margin-bottom: 13rem;
@@ -537,7 +530,6 @@ i {
     .users #forUpperFlex {
         display: flex;
         flex-direction: row-reverse;
-        /*justify-content: space-around;*/
     }
     @media (max-width: 1244px) {
         .input {
@@ -557,7 +549,6 @@ i {
     background-color: #f1f1f1;
     border-radius: 5px;
     position: absolute;
-    /*z-index: 100;*/
     margin-right: 20px;
 }
 

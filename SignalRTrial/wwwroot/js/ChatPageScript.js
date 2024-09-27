@@ -54,9 +54,6 @@ if (joinRoomButton) {
 
         setUser(userNameInput);
         setEmail(emailInput);
-
-        console.log(`Username Input: ${userNameInput}, Email Input: ${emailInput}`);
-
         userName = userNameInput;
         email = emailInput;
 
@@ -100,7 +97,6 @@ if (connection) {
     connection.on("SignUp", function (groups, gids) {
         const groupDiv = document.getElementById("groups-list");
         groupDiv.innerHTML = '';
-        console.log("we're in the joined room");
 
         groups.forEach((roomName, index) => {
             const newItem = document.createElement('li');
@@ -176,14 +172,11 @@ if (connection) {
             if (event.key === "Enter") {
                 const message = document.getElementById("messageInput").value;
                 const roomName = document.getElementById("roomTitle");
-                console.log("Message: ", message);
-                console.log(`room: ${roomName}`);
                 if (message && roomName.textContent.replace("Room: ", "").trim()) {
                     connection.invoke("SendMessageToRoom", roomName.textContent.replace("Room: ", "").trim(), message)
 
                         .catch(err => console.error(err.toString()));
                     loadMessages(roomName.textContent.replace("Room: ", "").trim());
-                    console.log(`roommmmmmmmmmmmm: ${roomName.textContent.replace("Room: ", "").trim()}`);
                     document.getElementById("messageInput").value = '';
 
 
@@ -209,8 +202,6 @@ if (connection) {
     });
 
     connection.on("ReceiveMessage", function (msg, i, gid, gname, isReadByAll) {
-        console.log("received index is: ", i);
-        console.log("received message is: ", msg.content);
         const messages = document.getElementById("messages");
         const userName = getUser();
 
@@ -219,14 +210,8 @@ if (connection) {
         const msgType = msg.sender === userName ? "users" : "others";
         const seenClass = isReadByAll ? 'blue-seen-icon' : '';
 
-        console.log('msg.reactions:', msg.reactions);
-        console.log('reactionMap:', reactionMap);
-
-
         const reactionsList = msg.reactions.map(reaction =>
             `<span class="reaction-display">${reactionMap[reaction.reactionType] || reaction.reactionType}</span>`).join('');
-        console.log(`IN ReceiveMessage: ${reactionsList}`);
-        console.log("SEENCLASS IN ReceiveMessage: ", seenClass);
 
         const url = new URL(window.location.href);
         const params = new URLSearchParams(url.search);
@@ -309,7 +294,6 @@ if (connection) {
                 </div>
             `;
             $('#alertModal').modal('show');
-            console.log("Notification: " + notificationMessage);
         }
 
     });
@@ -327,9 +311,6 @@ if (connection) {
     });
 
     connection.on("AddToGroupsDiv", function (groups, gids) {
-        console.log("Groups:", groups);
-        console.log("Group IDs:", gids);
-
         const groupDiv = document.getElementById("groups-list");
         groupDiv.innerHTML = '';
 
@@ -406,34 +387,22 @@ if (connection) {
             if (e.target && e.target.nodeName === "P") {
                 const selectedGroup = e.target.textContent.trim();
                 const sanitizedGroupName = sanitizeGroupName(selectedGroup);
-
-                console.log(selectedGroup);
-
                 const roomNameElements = document.getElementsByClassName("roomName");
                 if (roomNameElements.length > 0) {
                     roomNameElements[0].value = selectedGroup;
                 }
-
-
                 let badge = document.querySelector('.new-msg-badge');
                 if (badge) {
                     badge.remove();
                 }
-
-
-
 
                 const topBarTitle = document.getElementById("roomTitle");
                 topBarTitle.innerText = `Room: ${selectedGroup}`;
 
                 const newUrl = `${window.location.origin}${window.location.pathname}?chat=${encodeURIComponent(sanitizedGroupName)}`;
                 history.pushState({ group: sanitizedGroupName }, '', newUrl);
-
-                console.log("rooom is: ", selectedGroup);
-
                 document.getElementById("messages").innerHTML = '';
                 loadMessages(selectedGroup);
-                console.log(" 2 . rooom is: ", selectedGroup);
 
                 const existingMembersDiv = document.querySelector(`.membersDiv`);
                 if (existingMembersDiv) {
@@ -464,7 +433,6 @@ if (connection) {
 
 
                     groupMembersBtn.addEventListener("click", () => {
-                        console.log(`selected grp: ${selectedGroup}`);
 
                         const existingDiv = document.querySelector(`#membersDiv-${sanitizedGroupName}`);
                         if (existingDiv) {
@@ -480,7 +448,6 @@ if (connection) {
                             const bod = document.getElementsByClassName("cont")[0];
                             bod.appendChild(membersDiv);
 
-                            console.log("i clicked on the members btn!!!");
                         }
                     });
                 }
@@ -520,7 +487,6 @@ if (connection) {
 
 
     function loadMessages(roomName) {
-        console.log("loading messages from: ", roomName);
         connection.invoke("LoadMessages", roomName).catch(err => console.log(err.toString()));
     }
 
@@ -609,49 +575,47 @@ if (connection) {
         `;
 
 
-            //to toggle visibility of options
-            document.querySelectorAll('.msg-actions').forEach(icon => {
-                icon.addEventListener('click', function () {
-                    const index = this.getAttribute('data-index');
-                    toggleOptions(index);
-                });
-            });
-
-
-            //event listeners for edit buttons
-            document.querySelectorAll('.edit-btn').forEach(button => {
-                button.addEventListener('click', function () {
-                    const msgId = this.getAttribute('data-id');
-                    console.log(`Edit message with ID: ${msgId}`);
-                    const index = this.getAttribute('data-index');
-                    performEdit(index, msgId);
-                });
-            });
-
-            document.querySelectorAll('.delete-btn').forEach(button => {
-                button.addEventListener('click', function () {
-                    const msgId = this.getAttribute('data-id');
-                    console.log("THE DELETE MESSAGE GROUP NAME IS: ", msgId);
-
-                    const index = this.getAttribute('data-index');
-                    console.log("THE DELETE MESSAGE GROUP NAME IS: ", index);
-
-                    const roomName = document.getElementById("roomTitle");
-                    deleteMessage(roomName.textContent.replace("Room: ", "").trim(), msgId, index);
-                    console.log("THE DELETE MESSAGE GROUP NAME IS: ", roomName.textContent.replace("Room: ", "").trim());
-                    const msgObj = document.getElementById(`message-${msgId}`);
-                    msgObj.remove();
-
-                });
-            });
-
-
             if (!msg.seenBy.includes(getUser()) && getUser() !== msg.userName) {
                 markMessageAsSeen(msg.id, getUser());
             }
 
         });
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        addEventeListeners();
+    }
+
+    function addEventeListeners() {
+
+        //to toggle visibility of options
+        document.querySelectorAll('.msg-actions').forEach(icon => {
+            icon.addEventListener('click', function () {
+                const index = this.getAttribute('data-index');
+                toggleOptions(index);
+            });
+        });
+
+
+        //event listeners for edit buttons
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const msgId = this.getAttribute('data-id');
+                const index = this.getAttribute('data-index');
+                performEdit(index, msgId);
+            });
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const msgId = this.getAttribute('data-id');
+
+                const index = this.getAttribute('data-index');
+                const roomName = document.getElementById("roomTitle");
+                deleteMessage(roomName.textContent.replace("Room: ", "").trim(), msgId, index);
+                const msgObj = document.getElementById(`message-${msgId}`);
+                msgObj.remove();
+
+            });
+        });
     }
 
     document.addEventListener("click", function (event) {
@@ -671,15 +635,10 @@ if (connection) {
 
             const index = event.target.closest(".reaction-list").id.split("-")[2];
             const messageId = `${index}`;
-
-            console.log(`User reacted with ${reaction} on message ${messageId}`);
             event.target.closest(".reaction-list").style.display = "none";
 
             addReactionToMessage(`message-${messageId}`, reaction);
 
-            console.log(`messageId: ${messageId}`);
-            console.log(`reaction: ${reaction}`);
-            console.log(`getUser(): ${getUser()}`);
             connection.invoke("SendReaction", messageId, reactionName, getUser())
                 .catch(function (err) {
                     console.error(err.toString());
@@ -688,10 +647,8 @@ if (connection) {
     });
 
     connection.on("ReceiveReaction", function (messageId, userName, reaction) {
-        console.log(`im in: ReceiveReaction: ${messageId}`);
 
         const messageDiv = document.getElementById(`message-${messageId}`);
-        console.log(`im in: ReceiveReaction: ${messageDiv}`);
         if (messageDiv) {
             const reactionsSection = messageDiv.querySelector(".reactions-section");
             if (reactionsSection) {
@@ -729,7 +686,6 @@ if (connection) {
 
     function performEdit(index, msgId) {
         const msgContent = document.getElementById(`msg-content-${index}`);
-        console.log(msgContent);
         const oldText = msgContent.textContent.trim();
 
         msgContent.innerHTML = `
@@ -745,7 +701,6 @@ if (connection) {
             const newText = document.getElementById(`edit-input-${index}`).value.trim();
             if (newText) {
                 msgContent.innerHTML = `<br>${newText}`;
-                console.log(`Message with ID: ${msgId} updated to: ${newText}`);
                 saveEditedMessage(msgId, newText);
             }
         });
@@ -759,7 +714,6 @@ if (connection) {
         } else {
             div.style.display = "none";
         }
-        console.log("it is toggled");
     }
 
 
@@ -788,11 +742,8 @@ if (connection) {
         document.getElementById("submit-group").addEventListener("click", (e) => {
             const grpInput = document.querySelector("#group-name-input");
             const userName = getUser();
-            console.log("Added the user to group", userName);
             console.log(userName);
             if (grpInput && userName) {
-                console.log(grpInput.value);
-
                 connection.invoke("JoinedRoom", grpInput.value, userName)
                     .catch(err => console.log(err.toString()));
             }
@@ -843,7 +794,6 @@ if (connection) {
 
 
     connection.on("MessageEdited", function (mid, newContent) {
-        console.log("MessageEdited: ", mid);
         const msgDiv = document.getElementById("groups-list");
         const msgToEdit = Array.from(msgDiv.children).find(item => item.querySelector('i').id === mid);
         if (msgToEdit) {
@@ -865,15 +815,10 @@ if (connection) {
 
     document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("submit-member").addEventListener("click", (e) => {
-            console.log("clicked on the add member btn");
             const memberInput = document.querySelector("#member-email-input");
             const roomName = document.getElementById("roomTitle");
-            console.log(roomName);
             const userName = getUser();
             if (memberInput && userName) {
-                console.log("memberInput.value is: ");
-                console.log(memberInput.value);
-
                 connection.invoke("AddUserToGroup", roomName.textContent.replace("Room: ", "").trim(), memberInput.value)
                     .catch(err => console.log(err.toString()));
             }
@@ -885,7 +830,6 @@ if (connection) {
 
 
     connection.on("GroupDeleted", function (gid) {
-        console.log("GroupDeleted: ", gid);
         const groupDiv = document.getElementById("groups-list");
         const groupToDelete = Array.from(groupDiv.children).find(item => item.querySelector('i').id === gid);
         if (groupToDelete) groupToDelete.remove();

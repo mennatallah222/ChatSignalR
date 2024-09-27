@@ -40,10 +40,7 @@ builder.Services.AddScoped<MessageService>();
 builder.Services.AddScoped<GroupService>();
 
 builder.Services.AddSignalR();
-//.AddStackExchangeRedis("localhost", options =>
-//{
-//    options.Configuration.ChannelPrefix = "chatApp:";
-//});
+
 
 
 builder.Services.AddControllers();
